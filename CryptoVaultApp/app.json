@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "CryptoVault",
+    "slug": "cryptovault",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "jsEngine": "jsc",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#050608"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.cryptovault.app",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Use Face ID to unlock your wallet"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#050608"
+      },
+      "package": "com.cryptovault.app",
+      "permissions": []
+    },
+    "plugins": [
+      "expo-secure-store"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "your-eas-project-id"
+      }
+    }
+  }
+}
