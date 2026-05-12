@@ -1,250 +1,247 @@
 // src/components/UI.js
-// All reusable UI primitives — equivalent to the web CSS classes
+// Professional Finance App Component Library
 
 import React from 'react'
 import {
-  View, Text, TouchableOpacity, TextInput, StyleSheet,
-  ActivityIndicator, Platform,
+  View, Text, TouchableOpacity, TextInput,
+  StyleSheet, ActivityIndicator, Platform,
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
-import { COLORS, RADIUS, SPACING, SHADOWS } from '../utils/theme'
+import { useTheme } from '../context/ThemeContext'
+import { RADIUS, SPACING, SHADOWS, FONT, GRADIENTS } from '../utils/theme'
 
-// ── Card ───────────────────────────────────────────────────────────────
-export const Card = ({ children, style, glow }) => (
-  <View style={[styles.card, glow && styles.cardGlow, style]}>
-    {children}
-  </View>
-)
+// ── useC hook — gets colors from theme context ────────────────
+export const useC = () => useTheme().colors
 
-// ── Primary Button ─────────────────────────────────────────────────────
-export const PrimaryButton = ({ title, onPress, disabled, loading, icon, style }) => (
-  <TouchableOpacity onPress={onPress} disabled={disabled || loading} activeOpacity={0.82} style={style}>
-    <LinearGradient
-      colors={disabled ? ['#3a3660', '#2a3450'] : ['#7c6ff7', '#4facfe']}
-      start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-      style={[styles.primaryBtn, disabled && { opacity: 0.45 }]}
-    >
-      {loading
-        ? <ActivityIndicator color="#fff" size="small" />
-        : <>
-            {icon && <Text style={{ fontSize: 16, marginRight: 8 }}>{icon}</Text>}
-            <Text style={styles.primaryBtnText}>{title}</Text>
-          </>
-      }
-    </LinearGradient>
-  </TouchableOpacity>
-)
-
-// ── Secondary Button ───────────────────────────────────────────────────
-export const SecondaryButton = ({ title, onPress, disabled, icon, style }) => (
-  <TouchableOpacity
-    onPress={onPress} disabled={disabled} activeOpacity={0.75}
-    style={[styles.secondaryBtn, disabled && { opacity: 0.4 }, style]}
-  >
-    {icon && <Text style={{ fontSize: 15, marginRight: 7 }}>{icon}</Text>}
-    <Text style={styles.secondaryBtnText}>{title}</Text>
-  </TouchableOpacity>
-)
-
-// ── Ghost Button ───────────────────────────────────────────────────────
-export const GhostButton = ({ title, onPress, style, textStyle }) => (
-  <TouchableOpacity onPress={onPress} activeOpacity={0.7} style={style}>
-    <Text style={[{ color: COLORS.textMuted, fontSize: 14 }, textStyle]}>{title}</Text>
-  </TouchableOpacity>
-)
-
-// ── Input ──────────────────────────────────────────────────────────────
-export const Input = ({ label, error, mono, ...props }) => (
-  <View style={{ marginBottom: SPACING.md }}>
-    {label && <Text style={styles.label}>{label}</Text>}
-    <TextInput
-      style={[styles.input, mono && styles.inputMono, error && styles.inputError]}
-      placeholderTextColor={COLORS.textDim}
-      {...props}
-    />
-    {error && <Text style={styles.inputErrorText}>{error}</Text>}
-  </View>
-)
-
-// ── Alert ──────────────────────────────────────────────────────────────
-export const Alert = ({ type = 'info', children, style }) => {
-  const configs = {
-    danger:  { bg: 'rgba(244,63,94,0.12)',  border: 'rgba(244,63,94,0.3)',  text: '#fca5a5' },
-    success: { bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.3)', text: '#6ee7b7' },
-    warning: { bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.3)', text: '#fcd34d' },
-    info:    { bg: 'rgba(124,111,247,0.12)',border: 'rgba(124,111,247,0.3)',text: '#a5b4fc' },
+// ── Card ──────────────────────────────────────────────────────
+export const Card = ({ children, style, onPress, gradient }) => {
+  const C = useC()
+  const base = {
+    backgroundColor: C.surface, borderRadius: RADIUS.lg,
+    borderWidth: 1, borderColor: C.border,
+    padding: SPACING.lg, ...SHADOWS.card,
   }
-  const c = configs[type] || configs.info
+  if (gradient) return (
+    <LinearGradient colors={gradient} style={[base, style]}>{children}</LinearGradient>
+  )
+  if (onPress) return (
+    <TouchableOpacity style={[base, style]} onPress={onPress} activeOpacity={0.85}>{children}</TouchableOpacity>
+  )
+  return <View style={[base, style]}>{children}</View>
+}
+
+// ── PrimaryButton ─────────────────────────────────────────────
+export const PrimaryButton = ({ title, onPress, disabled, loading, icon, style, small, danger }) => {
+  const colors = danger ? GRADIENTS.danger : GRADIENTS.accent
   return (
-    <View style={[styles.alert, { backgroundColor: c.bg, borderColor: c.border }, style]}>
-      <Text style={{ color: c.text, fontSize: 13, lineHeight: 19 }}>{children}</Text>
+    <TouchableOpacity onPress={onPress} disabled={disabled || loading} activeOpacity={0.82} style={style}>
+      <LinearGradient
+        colors={disabled ? ['#2a2b40', '#1e2035'] : colors}
+        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+        style={[styles.primaryBtn, small && styles.primaryBtnSm, (disabled || loading) && { opacity: 0.5 }]}
+      >
+        {loading
+          ? <ActivityIndicator color="#fff" size="small" />
+          : <>
+              {icon && <Text style={{ fontSize: small ? 14 : 16, marginRight: 7 }}>{icon}</Text>}
+              <Text style={[styles.primaryBtnText, small && { fontSize: 13 }]}>{title}</Text>
+            </>
+        }
+      </LinearGradient>
+    </TouchableOpacity>
+  )
+}
+
+// ── SecondaryButton ───────────────────────────────────────────
+export const SecondaryButton = ({ title, onPress, disabled, icon, style, small }) => {
+  const C = useC()
+  return (
+    <TouchableOpacity
+      onPress={onPress} disabled={disabled} activeOpacity={0.75}
+      style={[{
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+        backgroundColor: C.surface2, borderRadius: RADIUS.md,
+        paddingVertical: small ? 10 : 13, paddingHorizontal: small ? 14 : 20,
+        borderWidth: 1.5, borderColor: C.border2,
+        opacity: disabled ? 0.45 : 1,
+      }, style]}
+    >
+      {icon && <Text style={{ fontSize: 15, marginRight: 7 }}>{icon}</Text>}
+      <Text style={{ color: C.text, fontWeight: '600', fontSize: small ? 13 : 14 }}>{title}</Text>
+    </TouchableOpacity>
+  )
+}
+
+// ── IconButton ─────────────────────────────────────────────────
+export const IconButton = ({ icon, onPress, style, size = 40 }) => {
+  const C = useC()
+  return (
+    <TouchableOpacity onPress={onPress} activeOpacity={0.75}
+      style={[{ width: size, height: size, borderRadius: size / 2.5, backgroundColor: C.surface2, borderWidth: 1, borderColor: C.border, justifyContent: 'center', alignItems: 'center' }, style]}>
+      <Text style={{ fontSize: size * 0.4 }}>{icon}</Text>
+    </TouchableOpacity>
+  )
+}
+
+// ── Input ─────────────────────────────────────────────────────
+export const Input = ({ label, error, mono, right, style, inputStyle, ...props }) => {
+  const C = useC()
+  return (
+    <View style={[{ marginBottom: SPACING.md }, style]}>
+      {label && <Text style={[styles.label, { color: C.textSub }]}>{label}</Text>}
+      <View style={[styles.inputWrap, { backgroundColor: C.surface2, borderColor: error ? C.danger : C.border }]}>
+        <TextInput
+          style={[styles.input, { color: C.text }, mono && { fontFamily: FONT.mono, fontSize: 12 }, inputStyle]}
+          placeholderTextColor={C.textDim}
+          {...props}
+        />
+        {right}
+      </View>
+      {error && <Text style={[styles.inputError, { color: C.danger }]}>{error}</Text>}
     </View>
   )
 }
 
-// ── Badge ──────────────────────────────────────────────────────────────
-export const Badge = ({ label, type = 'muted', style }) => {
-  const configs = {
-    success: { bg: 'rgba(16,185,129,0.12)',  text: '#10b981' },
-    danger:  { bg: 'rgba(244,63,94,0.12)',   text: '#f43f5e' },
-    warning: { bg: 'rgba(245,158,11,0.12)',  text: '#f59e0b' },
-    accent:  { bg: 'rgba(124,111,247,0.15)', text: '#7c6ff7' },
-    muted:   { bg: COLORS.surface3,          text: COLORS.textMuted },
-  }
-  const c = configs[type] || configs.muted
+// ── Alert ─────────────────────────────────────────────────────
+export const Alert = ({ type = 'info', children, style, icon }) => {
+  const C = useC()
+  const cfg = {
+    danger:  { bg: C.dangerDim,  border: `${C.danger}40`,  text: C.danger,  defaultIcon: '⚠️' },
+    success: { bg: C.successDim, border: `${C.success}40`, text: C.success, defaultIcon: '✅' },
+    warning: { bg: C.warningDim, border: `${C.warning}40`, text: C.warning, defaultIcon: '⚡' },
+    info:    { bg: C.accentDim,  border: `${C.accent}40`,  text: C.accent,  defaultIcon: 'ℹ️' },
+  }[type] || {}
   return (
-    <View style={[styles.badge, { backgroundColor: c.bg }, style]}>
-      <Text style={{ color: c.text, fontSize: 10, fontWeight: '700', letterSpacing: 0.5 }}>
+    <View style={[{ flexDirection: 'row', gap: 10, backgroundColor: cfg.bg, borderRadius: RADIUS.md, padding: 12, borderWidth: 1, borderColor: cfg.border, alignItems: 'flex-start' }, style]}>
+      <Text style={{ fontSize: 14 }}>{icon || cfg.defaultIcon}</Text>
+      <Text style={{ color: cfg.text, fontSize: 13, lineHeight: 19, flex: 1 }}>{children}</Text>
+    </View>
+  )
+}
+
+// ── Badge ─────────────────────────────────────────────────────
+export const Badge = ({ label, type = 'muted', style }) => {
+  const C = useC()
+  const cfg = {
+    success: { bg: C.successDim, text: C.success },
+    danger:  { bg: C.dangerDim,  text: C.danger },
+    warning: { bg: C.warningDim, text: C.warning },
+    accent:  { bg: C.accentDim,  text: C.accent },
+    muted:   { bg: C.surface3,   text: C.textSub },
+  }[type] || { bg: C.surface3, text: C.textSub }
+  return (
+    <View style={[{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.full, backgroundColor: cfg.bg, alignSelf: 'flex-start' }, style]}>
+      <Text style={{ color: cfg.text, fontSize: 10, fontWeight: '700', letterSpacing: 0.4 }} numberOfLines={1}>
         {label.toUpperCase()}
       </Text>
     </View>
   )
 }
 
-// ── Section Header ─────────────────────────────────────────────────────
-export const SectionHeader = ({ title, action, onAction }) => (
-  <View style={styles.sectionHeader}>
-    <Text style={styles.sectionTitle}>{title}</Text>
-    {action && (
-      <TouchableOpacity onPress={onAction}>
-        <Text style={{ color: COLORS.accent, fontSize: 13 }}>{action}</Text>
-      </TouchableOpacity>
-    )}
-  </View>
-)
-
-// ── Row (key-value) ────────────────────────────────────────────────────
-export const InfoRow = ({ label, value, mono, last }) => (
-  <View style={[styles.infoRow, !last && { borderBottomWidth: 1, borderBottomColor: COLORS.border }]}>
-    <Text style={styles.infoLabel}>{label}</Text>
-    <Text style={[styles.infoValue, mono && { fontFamily: Platform.OS === 'ios' ? 'Courier New' : 'monospace', fontSize: 11 }]} numberOfLines={1}>
-      {value}
-    </Text>
-  </View>
-)
-
-// ── Divider ────────────────────────────────────────────────────────────
-export const Divider = ({ style }) => (
-  <View style={[{ height: 1, backgroundColor: COLORS.border, marginVertical: SPACING.md }, style]} />
-)
-
-// ── Network dot ────────────────────────────────────────────────────────
-export const NetworkDot = ({ color, size = 8 }) => (
-  <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: color }} />
-)
-
-// ── Copy box ───────────────────────────────────────────────────────────
-export const CopyBox = ({ text, onCopy }) => (
-  <TouchableOpacity style={styles.copyBox} onPress={onCopy} activeOpacity={0.7}>
-    <Text style={styles.copyText} numberOfLines={2}>{text}</Text>
-    <Text style={{ fontSize: 16 }}>📋</Text>
-  </TouchableOpacity>
-)
-
-// ── Loading Spinner ────────────────────────────────────────────────────
-export const Spinner = ({ size = 'small', color = COLORS.accent, fullScreen }) => {
+// ── Spinner ───────────────────────────────────────────────────
+export const Spinner = ({ size = 'small', fullScreen }) => {
+  const C = useC()
   if (fullScreen) return (
-    <View style={styles.spinnerFull}>
-      <ActivityIndicator size="large" color={color} />
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: C.bg }}>
+      <ActivityIndicator size="large" color={C.accent} />
     </View>
   )
-  return <ActivityIndicator size={size} color={color} />
+  return <ActivityIndicator size={size} color={C.accent} />
 }
 
-// ── Screen Wrapper ─────────────────────────────────────────────────────
-export const ScreenTitle = ({ title, subtitle }) => (
-  <View style={{ marginBottom: SPACING.lg }}>
-    <Text style={styles.screenTitle}>{title}</Text>
-    {subtitle && <Text style={styles.screenSubtitle}>{subtitle}</Text>}
-  </View>
-)
+// ── InfoRow ───────────────────────────────────────────────────
+export const InfoRow = ({ label, value, mono, last }) => {
+  const C = useC()
+  return (
+    <View style={[styles.infoRow, !last && { borderBottomWidth: 1, borderBottomColor: C.border }]}>
+      <Text style={[styles.infoLabel, { color: C.textSub }]}>{label}</Text>
+      <Text style={[styles.infoValue, { color: C.text }, mono && { fontFamily: FONT.mono, fontSize: 11 }]} numberOfLines={1}>
+        {value}
+      </Text>
+    </View>
+  )
+}
 
-// ─────────────────────────────────────────────────────────────────────
+// ── Divider ───────────────────────────────────────────────────
+export const Divider = ({ style }) => {
+  const C = useC()
+  return <View style={[{ height: 1, backgroundColor: C.border, marginVertical: SPACING.md }, style]} />
+}
+
+// ── SectionHeader ─────────────────────────────────────────────
+export const SectionHeader = ({ title, action, onAction }) => {
+  const C = useC()
+  return (
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+      <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1.2, textTransform: 'uppercase', color: C.textSub }}>{title}</Text>
+      {action && <TouchableOpacity onPress={onAction}><Text style={{ color: C.accent, fontSize: 13, fontWeight: '600' }}>{action}</Text></TouchableOpacity>}
+    </View>
+  )
+}
+
+// ── Tag ───────────────────────────────────────────────────────
+export const Tag = ({ label, color, onPress }) => {
+  const C = useC()
+  const base = { paddingHorizontal: 12, paddingVertical: 6, borderRadius: RADIUS.full, borderWidth: 1.5 }
+  const active = color
+    ? { backgroundColor: `${color}18`, borderColor: `${color}50` }
+    : { backgroundColor: C.accentDim, borderColor: `${C.accent}50` }
+  const textColor = color || C.accent
+  if (onPress) return (
+    <TouchableOpacity style={[base, active]} onPress={onPress} activeOpacity={0.75}>
+      <Text style={{ color: textColor, fontWeight: '700', fontSize: 12 }}>{label}</Text>
+    </TouchableOpacity>
+  )
+  return (
+    <View style={[base, active]}>
+      <Text style={{ color: textColor, fontWeight: '700', fontSize: 12 }}>{label}</Text>
+    </View>
+  )
+}
+
+// ── Pill selector (horizontal row) ────────────────────────────
+export const PillRow = ({ options, selected, onSelect, colorMap }) => {
+  const C = useC()
+  return options.map(opt => {
+    const isSelected = selected === opt
+    const col = colorMap?.[opt] || C.accent
+    return (
+      <TouchableOpacity key={opt}
+        style={[styles.pill, { borderColor: isSelected ? col : C.border, backgroundColor: isSelected ? `${col}18` : C.surface2 }]}
+        onPress={() => onSelect(opt)} activeOpacity={0.7}
+      >
+        <Text style={{ color: isSelected ? col : C.textSub, fontWeight: isSelected ? '700' : '500', fontSize: 12 }}>
+          {opt}
+        </Text>
+      </TouchableOpacity>
+    )
+  })
+}
+
+// ── StatCard ──────────────────────────────────────────────────
+export const StatCard = ({ label, value, sub, icon, color, style }) => {
+  const C = useC()
+  return (
+    <View style={[{ backgroundColor: C.surface, borderRadius: RADIUS.lg, padding: 16, borderWidth: 1, borderColor: C.border, flex: 1 }, style]}>
+      {icon && <Text style={{ fontSize: 22, marginBottom: 8 }}>{icon}</Text>}
+      <Text style={{ fontSize: 10, color: C.textSub, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 4 }}>{label}</Text>
+      <Text style={{ fontSize: 20, fontWeight: '800', color: color || C.text, letterSpacing: -0.5 }}>{value}</Text>
+      {sub && <Text style={{ fontSize: 11, color: C.textSub, marginTop: 2 }}>{sub}</Text>}
+    </View>
+  )
+}
+
+// ── Styles ────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.lg,
-    padding: SPACING.lg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    ...SHADOWS.sm,
-  },
-  cardGlow: {
-    borderColor: 'rgba(124,111,247,0.3)',
-  },
-  primaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: RADIUS.md,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    ...SHADOWS.accent,
-  },
-  primaryBtnText: { color: '#fff', fontWeight: '700', fontSize: 15, letterSpacing: 0.2 },
-  secondaryBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: COLORS.surface2,
-    borderRadius: RADIUS.md,
-    paddingVertical: 13, paddingHorizontal: 20,
-    borderWidth: 1, borderColor: COLORS.border2,
-  },
-  secondaryBtnText: { color: COLORS.text, fontWeight: '600', fontSize: 14 },
-  label: {
-    fontSize: 11, fontWeight: '700', letterSpacing: 1,
-    textTransform: 'uppercase', color: COLORS.textMuted, marginBottom: 6,
-  },
-  input: {
-    backgroundColor: COLORS.surface2,
-    borderRadius: RADIUS.md,
-    paddingVertical: 12, paddingHorizontal: 14,
-    color: COLORS.text, fontSize: 14,
-    borderWidth: 1.5, borderColor: COLORS.border,
-  },
-  inputMono: { fontFamily: Platform.OS === 'ios' ? 'Courier New' : 'monospace', fontSize: 12 },
-  inputError: { borderColor: COLORS.danger },
-  inputErrorText: { color: COLORS.danger, fontSize: 11, marginTop: 4 },
-  alert: {
-    borderRadius: RADIUS.md, padding: 12,
-    borderWidth: 1, marginBottom: SPACING.md,
-  },
-  badge: {
-    paddingHorizontal: 9, paddingVertical: 3,
-    borderRadius: 100, alignSelf: 'flex-start',
-  },
-  sectionHeader: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'center', marginBottom: 14,
-  },
-  sectionTitle: {
-    fontSize: 11, fontWeight: '700', letterSpacing: 1.2,
-    textTransform: 'uppercase', color: COLORS.textMuted,
-  },
-  infoRow: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'center', paddingVertical: 10,
-  },
-  infoLabel: { color: COLORS.textMuted, fontSize: 13, flex: 1 },
-  infoValue: { color: COLORS.text, fontWeight: '600', fontSize: 13, maxWidth: 220, textAlign: 'right' },
-  copyBox: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: COLORS.surface2,
-    borderRadius: RADIUS.md, padding: 12,
-    borderWidth: 1, borderColor: COLORS.border, gap: 10,
-  },
-  copyText: {
-    flex: 1, color: COLORS.text,
-    fontFamily: Platform.OS === 'ios' ? 'Courier New' : 'monospace',
-    fontSize: 11, lineHeight: 18,
-  },
-  spinnerFull: {
-    flex: 1, justifyContent: 'center', alignItems: 'center',
-    backgroundColor: COLORS.bg,
-  },
-  screenTitle: {
-    fontSize: 26, fontWeight: '800', color: COLORS.text, letterSpacing: -0.5,
-  },
-  screenSubtitle: {
-    fontSize: 14, color: COLORS.textMuted, marginTop: 4, lineHeight: 20,
-  },
+  primaryBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: RADIUS.md, paddingVertical: 15, paddingHorizontal: 22, ...SHADOWS.accent },
+  primaryBtnSm: { paddingVertical: 10, paddingHorizontal: 16 },
+  primaryBtnText: { color: '#fff', fontWeight: '700', fontSize: 15, letterSpacing: 0.1 },
+  label: { fontSize: 12, fontWeight: '600', letterSpacing: 0.3, marginBottom: 7, textTransform: 'uppercase' },
+  inputWrap: { flexDirection: 'row', alignItems: 'center', borderRadius: RADIUS.md, borderWidth: 1.5, paddingHorizontal: 14, paddingVertical: Platform.OS === 'ios' ? 14 : 12 },
+  input: { flex: 1, fontSize: 15, padding: 0 },
+  inputError: { fontSize: 11, marginTop: 4 },
+  infoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 11 },
+  infoLabel: { fontSize: 13, flex: 1 },
+  infoValue: { fontWeight: '600', fontSize: 13, maxWidth: 220, textAlign: 'right' },
+  pill: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: RADIUS.full, borderWidth: 1.5, marginRight: 8 },
 })

@@ -2,7 +2,7 @@
   "expo": {
     "name": "CryptoVault",
     "slug": "cryptovault",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -16,7 +16,10 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.cryptovault.app",
       "infoPlist": {
-        "NSFaceIDUsageDescription": "Use Face ID to unlock your wallet"
+        "NSFaceIDUsageDescription": "Use Face ID to unlock your wallet",
+        "NSCameraUsageDescription": "Used for KYC selfie and document upload",
+        "NSPhotoLibraryUsageDescription": "Used to upload KYC documents",
+        "NSMicrophoneUsageDescription": "Used for KYC video recording"
       }
     },
     "android": {
@@ -25,15 +28,25 @@
         "backgroundColor": "#050608"
       },
       "package": "com.cryptovault.app",
-      "permissions": []
+      "usesCleartextTraffic": true,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "RECORD_AUDIO"
+      ]
     },
     "plugins": [
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-camera",
+      "expo-image-picker",
+      [
+        "expo-document-picker",
+        { "iCloudContainerEnvironment": "Production" }
+      ]
     ],
     "extra": {
-      "eas": {
-        "projectId": "your-eas-project-id"
-      }
+      "eas": { "projectId": "your-eas-project-id" }
     }
   }
 }

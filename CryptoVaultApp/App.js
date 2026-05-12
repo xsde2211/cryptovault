@@ -1,79 +1,80 @@
-// App.js — Root entry point for CryptoVault React Native 
-import 'react-native-get-random-values';
+// App.js — CryptoVault v2  Root Entry
+// CRITICAL: polyfill order matters — do not reorder these
+
+import 'react-native-get-random-values'
 import '@ethersproject/shims'
-import 'react-native-url-polyfill/auto';
+import 'react-native-url-polyfill/auto'
 
-import { Buffer } from 'buffer';
-global.Buffer = Buffer;
+import { Buffer } from 'buffer'
+global.Buffer = Buffer
+global.process = require('process')
 
-global.process = require('process');
+// ─────────────────────────────────────────────────────────────
 import React from 'react'
-import { StatusBar } from 'expo-status-bar'
+import { View, Text, StyleSheet, Platform } from 'react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
+
 import { AppProvider } from './src/context/AppContext'
+import { ThemeProvider, useTheme } from './src/context/ThemeContext'
 import AppNavigator from './src/navigation/AppNavigator'
+import { RADIUS } from './src/utils/theme'
 
-export default function App() {
-  return (
-    <SafeAreaProvider>
-      <AppProvider>
-        <StatusBar style="light" backgroundColor="#050608" />
-        <AppNavigator />
-        <Toast
-          config={{
-            success: ({ text1, text2 }) => (
-              <ToastComponent type="success" text1={text1} text2={text2} />
-            ),
-            error: ({ text1, text2 }) => (
-              <ToastComponent type="error" text1={text1} text2={text2} />
-            ),
-            info: ({ text1, text2 }) => (
-              <ToastComponent type="info" text1={text1} text2={text2} />
-            ),
-            warning: ({ text1, text2 }) => (
-              <ToastComponent type="warning" text1={text1} text2={text2} />
-            ),
-          }}
-          topOffset={60}
-        />
-      </AppProvider>
-    </SafeAreaProvider>
-  )
+// ── Toast styles ──────────────────────────────────────────────
+const TOAST_TYPES = {
+  success: { bg: 'rgba(0,212,170,0.12)',  border: 'rgba(0,212,170,0.35)',  icon: '✅' },
+  error:   { bg: 'rgba(255,77,109,0.12)', border: 'rgba(255,77,109,0.35)', icon: '❌' },
+  info:    { bg: 'rgba(108,99,255,0.12)', border: 'rgba(108,99,255,0.35)', icon: 'ℹ️' },
+  warning: { bg: 'rgba(255,184,48,0.12)', border: 'rgba(255,184,48,0.35)', icon: '⚠️' },
 }
 
-// Custom toast component
-import { View, Text, StyleSheet } from 'react-native'
-import { COLORS, RADIUS } from './src/utils/theme'
-
-const TOAST_STYLES = {
-  success: { bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.35)', icon: '✅' },
-  error:   { bg: 'rgba(244,63,94,0.15)',  border: 'rgba(244,63,94,0.35)',  icon: '❌' },
-  info:    { bg: 'rgba(124,111,247,0.15)',border: 'rgba(124,111,247,0.35)',icon: 'ℹ️' },
-  warning: { bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.35)', icon: '⚠️' },
-}
-
-function ToastComponent({ type, text1, text2 }) {
-  const s = TOAST_STYLES[type] || TOAST_STYLES.info
+function ToastComp({ type, text1, text2 }) {
+  const { colors } = useTheme()
+  const t = TOAST_TYPES[type] || TOAST_TYPES.info
   return (
-    <View style={[toastStyles.toast, { backgroundColor: s.bg, borderColor: s.border }]}>
-      <Text style={{ fontSize: 18 }}>{s.icon}</Text>
+    <View style={[ts.toast, { backgroundColor: t.bg, borderColor: t.border }]}>
+      <Text style={{ fontSize: 18 }}>{t.icon}</Text>
       <View style={{ flex: 1 }}>
-        {text1 && <Text style={toastStyles.text1}>{text1}</Text>}
-        {text2 && <Text style={toastStyles.text2}>{text2}</Text>}
+        {text1 && <Text style={[ts.t1, { color: colors.text }]}  numberOfLines={2}>{text1}</Text>}
+        {text2 && <Text style={[ts.t2, { color: colors.textSub }]} numberOfLines={1}>{text2}</Text>}
       </View>
     </View>
   )
 }
 
-const toastStyles = StyleSheet.create({
+const toastConfig = {
+  success: (p) => <ToastComp type="success" {...p} />,
+  error:   (p) => <ToastComp type="error"   {...p} />,
+  info:    (p) => <ToastComp type="info"    {...p} />,
+  warning: (p) => <ToastComp type="warning" {...p} />,
+}
+
+const ts = StyleSheet.create({
   toast: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    marginHorizontal: 16, paddingVertical: 12, paddingHorizontal: 16,
-    borderRadius: RADIUS.md, borderWidth: 1,
+    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
+    marginHorizontal: 14, paddingVertical: 13, paddingHorizontal: 16,
+    borderRadius: RADIUS.lg, borderWidth: 1,
     shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3, shadowRadius: 8, elevation: 5,
+    shadowOpacity: 0.2, shadowRadius: 10, elevation: 6,
   },
-  text1: { color: COLORS.text, fontWeight: '700', fontSize: 14 },
-  text2: { color: COLORS.textMuted, fontSize: 12, marginTop: 1 },
+  t1: { fontWeight: '700', fontSize: 14, lineHeight: 20 },
+  t2: { fontSize: 12, marginTop: 1 },
 })
+
+// ── Root ──────────────────────────────────────────────────────
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <AppProvider>
+          <AppNavigator />
+          <Toast
+            config={toastConfig}
+            topOffset={Platform.OS === 'ios' ? 60 : 44}
+            visibilityTime={3500}
+          />
+        </AppProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
+  )
+}
