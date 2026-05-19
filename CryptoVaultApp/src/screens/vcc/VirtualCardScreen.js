@@ -12,14 +12,14 @@ import {
   topUpCard, spendFromCard, getCardTransactions,
 } from '../../services/supabase/cardService'
 import { useApp } from '../../context/AppContext'
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../../utils/theme'
+import { useTheme } from '../../context/ThemeContext'
+import { SPACING, RADIUS, SHADOWS } from '../../utils/theme'
 import { Card, PrimaryButton, SecondaryButton, Alert, Spinner, Input, Badge } from '../../components/UI'
 import Toast from 'react-native-toast-message'
 
 const { width: SCREEN_W } = Dimensions.get('window')
 const CARD_W = SCREEN_W - SPACING.lg * 2
 
-// ── Physical card visual ──────────────────────────────────────
 function CardVisual({ card, revealed, onToggle }) {
   const fmt = (n) => n.replace(/(\d{4})/g, '$1 ').trim()
   return (
@@ -29,38 +29,35 @@ function CardVisual({ card, revealed, onToggle }) {
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
         style={[styles.cardVisual, SHADOWS.accent]}
       >
-        {/* Chip */}
         <View style={styles.chip} />
-        {/* Network */}
-        <View style={styles.cardNetworkBadge}>
-          <Text style={{ color: '#fff', fontWeight: '800', fontSize: 13, letterSpacing: 1 }}>{card.network_type}</Text>
+        <View style={styles.cardNetBadge}>
+          <Text style={{ color: '#fff', fontWeight: '800', fontSize: 12, letterSpacing: 1 }}>{card.network_type}</Text>
         </View>
-        {/* Number */}
         <Text style={styles.cardNumber}>
           {revealed ? fmt(card.card_number) : '•••• •••• •••• ' + card.card_number.slice(-4)}
         </Text>
-        {/* Bottom row */}
         <View style={styles.cardBottom}>
           <View>
-            <Text style={styles.cardSmallLabel}>Card Holder</Text>
-            <Text style={styles.cardSmallValue}>{card.cardholder_name}</Text>
+            <Text style={styles.cardSmLabel}>Card Holder</Text>
+            <Text style={styles.cardSmValue}>{card.cardholder_name}</Text>
           </View>
           <View>
-            <Text style={styles.cardSmallLabel}>Expires</Text>
-            <Text style={styles.cardSmallValue}>{card.expiry_month}/{card.expiry_year}</Text>
+            <Text style={styles.cardSmLabel}>Expires</Text>
+            <Text style={styles.cardSmValue}>{card.expiry_month}/{card.expiry_year}</Text>
           </View>
           <View>
-            <Text style={styles.cardSmallLabel}>CVV</Text>
-            <Text style={styles.cardSmallValue}>{revealed ? card.cvv : '•••'}</Text>
+            <Text style={styles.cardSmLabel}>CVV</Text>
+            <Text style={styles.cardSmValue}>{revealed ? card.cvv : '•••'}</Text>
           </View>
           <View>
-            <Text style={styles.cardSmallLabel}>Balance</Text>
-            <Text style={styles.cardSmallValue}>${parseFloat(card.balance_usdt).toFixed(2)}</Text>
+            <Text style={styles.cardSmLabel}>Balance</Text>
+            <Text style={styles.cardSmValue}>${parseFloat(card.balance_usdt).toFixed(2)}</Text>
           </View>
         </View>
-        {/* Reveal hint */}
         <View style={styles.revealHint}>
-          <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10 }}>{revealed ? '👁 Tap to hide' : '👁 Tap to reveal'}</Text>
+          <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10 }}>
+            {revealed ? '👁 Tap to hide' : '👁 Tap to reveal'}
+          </Text>
         </View>
       </LinearGradient>
     </TouchableOpacity>
@@ -68,37 +65,33 @@ function CardVisual({ card, revealed, onToggle }) {
 }
 
 export default function VirtualCardScreen({ navigation }) {
-  const { user, activeWallet } = useApp()
-  const [cards,       setCards]       = useState([])
-  const [variants,    setVariants]    = useState([])
-  const [selectedCard,setSelectedCard]= useState(null)
-  const [revealed,    setRevealed]    = useState({})
-  const [txns,        setTxns]        = useState([])
-  const [loading,     setLoading]     = useState(true)
-  const [tab,         setTab]         = useState('cards')    // cards | apply
-  const [applyModal,  setApplyModal]  = useState(false)
-  const [topUpModal,  setTopUpModal]  = useState(false)
-  const [spendModal,  setSpendModal]  = useState(false)
+  const { activeWallet } = useApp()
+  const { colors } = useTheme()
 
-  // Apply form
+  const [cards,      setCards]      = useState([])
+  const [variants,   setVariants]   = useState([])
+  const [selCard,    setSelCard]     = useState(null)
+  const [revealed,   setRevealed]   = useState({})
+  const [txns,       setTxns]       = useState([])
+  const [loading,    setLoading]    = useState(true)
+  const [applyModal, setApplyModal] = useState(false)
+  const [topUpModal, setTopUpModal] = useState(false)
+  const [spendModal, setSpendModal] = useState(false)
+
   const [applyVariant, setApplyVariant] = useState(null)
   const [applyName,    setApplyName]    = useState('')
   const [applyNetwork, setApplyNetwork] = useState('VISA')
   const [applyLoading, setApplyLoading] = useState(false)
-
-  // Top-up form
-  const [topUpAmt, setTopUpAmt] = useState('')
+  const [topUpAmt,     setTopUpAmt]     = useState('')
   const [topUpLoading, setTopUpLoading] = useState(false)
-
-  // Spend form
-  const [spendAmt, setSpendAmt] = useState('')
-  const [spendNote, setSpendNote] = useState('')
+  const [spendAmt,     setSpendAmt]     = useState('')
+  const [spendNote,    setSpendNote]    = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
     const [c, v] = await Promise.all([getUserCards(), getCardVariants()])
     setCards(c); setVariants(v)
-    if (c.length > 0) { setSelectedCard(c[0]); loadTxns(c[0].id) }
+    if (c.length > 0) { setSelCard(c[0]); loadTxns(c[0].id) }
     setLoading(false)
   }, [])
 
@@ -127,9 +120,9 @@ export default function VirtualCardScreen({ navigation }) {
     if (!topUpAmt || parseFloat(topUpAmt) <= 0) { Toast.show({ type: 'error', text1: 'Enter valid amount' }); return }
     setTopUpLoading(true)
     try {
-      await topUpCard(selectedCard.id, topUpAmt, activeWallet?.address)
+      await topUpCard(selCard.id, topUpAmt, activeWallet?.address)
       setTopUpModal(false); setTopUpAmt('')
-      await load(); loadTxns(selectedCard.id)
+      await load(); loadTxns(selCard.id)
       Toast.show({ type: 'success', text1: `$${topUpAmt} added to card ✅` })
     } catch (err) { Toast.show({ type: 'error', text1: err.message }) }
     setTopUpLoading(false)
@@ -138,9 +131,9 @@ export default function VirtualCardScreen({ navigation }) {
   const handleSpend = async () => {
     if (!spendAmt || parseFloat(spendAmt) <= 0) { Toast.show({ type: 'error', text1: 'Enter valid amount' }); return }
     try {
-      await spendFromCard(selectedCard.id, spendAmt, spendNote || 'Spend')
+      await spendFromCard(selCard.id, spendAmt, spendNote || 'Spend')
       setSpendModal(false); setSpendAmt(''); setSpendNote('')
-      await load(); loadTxns(selectedCard.id)
+      await load(); loadTxns(selCard.id)
       Toast.show({ type: 'success', text1: `$${spendAmt} spent ✅` })
     } catch (err) { Toast.show({ type: 'error', text1: err.message }) }
   }
@@ -148,11 +141,13 @@ export default function VirtualCardScreen({ navigation }) {
   const toggleReveal = (id) => setRevealed(p => ({ ...p, [id]: !p[id] }))
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Virtual Cards</Text>
-        <TouchableOpacity style={styles.addBtn} onPress={() => setApplyModal(true)}>
-          <Text style={{ color: COLORS.accent, fontWeight: '700', fontSize: 13 }}>+ New Card</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Virtual Cards</Text>
+        <TouchableOpacity
+          style={[styles.addBtn, { backgroundColor: colors.accentDim, borderColor: `${colors.accent}50` }]}
+          onPress={() => setApplyModal(true)}>
+          <Text style={{ color: colors.accent, fontWeight: '700', fontSize: 13 }}>+ New Card</Text>
         </TouchableOpacity>
       </View>
 
@@ -161,22 +156,29 @@ export default function VirtualCardScreen({ navigation }) {
       ) : cards.length === 0 ? (
         <View style={styles.emptyWrap}>
           <Text style={{ fontSize: 60, marginBottom: 16 }}>💳</Text>
-          <Text style={styles.emptyTitle}>No Virtual Cards</Text>
-          <Text style={styles.emptyText}>Apply for a virtual card to start spending your crypto balance as fiat.</Text>
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>No Virtual Cards</Text>
+          <Text style={{ color: colors.textSub, textAlign: 'center', lineHeight: 20, marginBottom: 24 }}>
+            Apply for a virtual card to start spending your crypto balance.
+          </Text>
           <PrimaryButton title="Apply for Card" onPress={() => setApplyModal(true)} />
-          <TouchableOpacity onPress={() => navigation.navigate('KYC')} style={{ marginTop: 12 }}>
-            <Text style={{ color: COLORS.accent, fontSize: 13 }}>Complete KYC first →</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('KYC')} style={{ marginTop: 14 }}>
+            <Text style={{ color: colors.accent, fontSize: 13 }}>Complete KYC first →</Text>
           </TouchableOpacity>
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.scroll}>
-          {/* Card selector */}
+          {/* Card tab selector */}
           {cards.length > 1 && (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: SPACING.md }}>
               {cards.map(c => (
-                <TouchableOpacity key={c.id} onPress={() => { setSelectedCard(c); loadTxns(c.id) }}
-                  style={[styles.cardTab, selectedCard?.id === c.id && styles.cardTabActive]}>
-                  <Text style={{ color: selectedCard?.id === c.id ? COLORS.accent : COLORS.textMuted, fontSize: 12, fontWeight: '700' }}>
+                <TouchableOpacity
+                  key={c.id}
+                  style={[styles.cardTab, {
+                    backgroundColor: selCard?.id === c.id ? colors.accentDim : colors.surface2,
+                    borderColor: selCard?.id === c.id ? `${colors.accent}60` : colors.border,
+                  }]}
+                  onPress={() => { setSelCard(c); loadTxns(c.id) }}>
+                  <Text style={{ color: selCard?.id === c.id ? colors.accent : colors.textSub, fontSize: 12, fontWeight: '700' }}>
                     {c.variant} •••{c.card_number.slice(-4)}
                   </Text>
                 </TouchableOpacity>
@@ -184,39 +186,39 @@ export default function VirtualCardScreen({ navigation }) {
             </ScrollView>
           )}
 
-          {/* Card visual */}
-          {selectedCard && (
+          {selCard && (
             <>
-              <CardVisual card={selectedCard} revealed={!!revealed[selectedCard.id]} onToggle={() => toggleReveal(selectedCard.id)} />
+              {/* Card visual */}
+              <CardVisual card={selCard} revealed={!!revealed[selCard.id]} onToggle={() => toggleReveal(selCard.id)} />
 
-              {/* Card details strip */}
-              <View style={styles.detailsStrip}>
-                <View style={styles.detailItem}>
-                  <Text style={styles.detailLabel}>Variant</Text>
-                  <Text style={styles.detailValue}>{selectedCard.variant}</Text>
-                </View>
-                <View style={styles.detailItem}>
-                  <Text style={styles.detailLabel}>Network</Text>
-                  <Text style={styles.detailValue}>{selectedCard.network_type}</Text>
-                </View>
-                <View style={styles.detailItem}>
-                  <Text style={styles.detailLabel}>Status</Text>
-                  <Badge label={selectedCard.status} type={selectedCard.status === 'active' ? 'success' : 'warning'} />
-                </View>
+              {/* Details strip */}
+              <View style={[styles.detailsStrip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                {[{ label: 'Variant', value: selCard.variant }, { label: 'Network', value: selCard.network_type }, { label: 'Status', value: selCard.status }].map((d, i) => (
+                  <View key={d.label} style={[styles.detailItem, i < 2 && { borderRightWidth: 1, borderRightColor: colors.border }]}>
+                    <Text style={{ fontSize: 9, color: colors.textDim, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>{d.label}</Text>
+                    {d.label === 'Status'
+                      ? <Badge label={d.value} type={d.value === 'active' ? 'success' : 'warning'} />
+                      : <Text style={{ fontSize: 13, fontWeight: '700', color: colors.text }}>{d.value}</Text>}
+                  </View>
+                ))}
               </View>
 
-              {/* Copy strip */}
-              {revealed[selectedCard.id] && (
-                <View style={styles.copyStrip}>
+              {/* Copy strip (when revealed) */}
+              {revealed[selCard.id] && (
+                <View style={[styles.copyStrip, { backgroundColor: colors.surface2, borderColor: colors.border }]}>
                   {[
-                    { label: 'Card Number', value: selectedCard.card_number },
-                    { label: 'Expiry', value: `${selectedCard.expiry_month}/${selectedCard.expiry_year}` },
-                    { label: 'CVV', value: selectedCard.cvv },
+                    { label: 'Card Number', value: selCard.card_number },
+                    { label: 'Expiry',      value: `${selCard.expiry_month}/${selCard.expiry_year}` },
+                    { label: 'CVV',         value: selCard.cvv },
                   ].map(item => (
-                    <TouchableOpacity key={item.label} style={styles.copyItem}
+                    <TouchableOpacity
+                      key={item.label}
+                      style={[styles.copyItem, { borderBottomColor: colors.border }]}
                       onPress={async () => { await Clipboard.setStringAsync(item.value); Toast.show({ type: 'success', text1: `${item.label} copied!` }) }}>
-                      <Text style={styles.copyLabel}>{item.label}</Text>
-                      <Text style={styles.copyValue}>{item.value}</Text>
+                      <Text style={{ fontSize: 11, color: colors.textSub, width: 90 }}>{item.label}</Text>
+                      <Text style={{ flex: 1, fontFamily: Platform.OS === 'ios' ? 'Courier New' : 'monospace', fontSize: 13, fontWeight: '600', color: colors.text }}>
+                        {item.value}
+                      </Text>
                       <Text style={{ fontSize: 12 }}>📋</Text>
                     </TouchableOpacity>
                   ))}
@@ -225,95 +227,97 @@ export default function VirtualCardScreen({ navigation }) {
 
               {/* Actions */}
               <View style={styles.actionRow}>
-                <TouchableOpacity style={styles.actionBtn} onPress={() => setTopUpModal(true)}>
-                  <Text style={{ fontSize: 22, marginBottom: 4 }}>💰</Text>
-                  <Text style={styles.actionLabel}>Top Up</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.actionBtn} onPress={() => setSpendModal(true)}>
-                  <Text style={{ fontSize: 22, marginBottom: 4 }}>🛍️</Text>
-                  <Text style={styles.actionLabel}>Spend</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('PhysicalCard', { card: selectedCard })}>
-                  <Text style={{ fontSize: 22, marginBottom: 4 }}>📦</Text>
-                  <Text style={styles.actionLabel}>Physical</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('KYC')}>
-                  <Text style={{ fontSize: 22, marginBottom: 4 }}>🪪</Text>
-                  <Text style={styles.actionLabel}>KYC</Text>
-                </TouchableOpacity>
+                {[
+                  { emoji: '💰', label: 'Top Up',   onPress: () => setTopUpModal(true) },
+                  { emoji: '🛍️',  label: 'Spend',    onPress: () => setSpendModal(true) },
+                  { emoji: '📦', label: 'Physical', onPress: () => navigation.navigate('PhysicalCard', { card: selCard }) },
+                  { emoji: '🪪', label: 'KYC',      onPress: () => navigation.navigate('KYC') },
+                ].map(a => (
+                  <TouchableOpacity
+                    key={a.label}
+                    style={[styles.actionBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                    onPress={a.onPress}>
+                    <Text style={{ fontSize: 22, marginBottom: 4 }}>{a.emoji}</Text>
+                    <Text style={{ color: colors.textSub, fontSize: 11, fontWeight: '600' }}>{a.label}</Text>
+                  </TouchableOpacity>
+                ))}
               </View>
 
               {/* Features */}
-              {selectedCard.features?.length > 0 && (
-                <Card style={{ marginBottom: SPACING.md }}>
-                  <Text style={styles.sectionLabel}>Card Features</Text>
-                  {selectedCard.features.map((f, i) => (
-                    <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                      <Text style={{ color: COLORS.success }}>✓</Text>
-                      <Text style={{ color: COLORS.text, fontSize: 13 }}>{f}</Text>
+              {selCard.features?.length > 0 && (
+                <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <Text style={[styles.sectionLabel, { color: colors.textSub }]}>Card Features</Text>
+                  {selCard.features.map((f, i) => (
+                    <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 7 }}>
+                      <Text style={{ color: colors.success }}>✓</Text>
+                      <Text style={{ color: colors.text, fontSize: 13 }}>{f}</Text>
                     </View>
                   ))}
-                </Card>
+                </View>
               )}
 
               {/* Transactions */}
-              <Card>
-                <Text style={styles.sectionLabel}>Transactions</Text>
+              <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <Text style={[styles.sectionLabel, { color: colors.textSub }]}>Transactions</Text>
                 {txns.length === 0 ? (
-                  <Text style={{ color: COLORS.textDim, fontSize: 13, textAlign: 'center', paddingVertical: 12 }}>No transactions yet</Text>
+                  <Text style={{ color: colors.textDim, fontSize: 13, textAlign: 'center', paddingVertical: 12 }}>No transactions yet</Text>
                 ) : txns.map(tx => (
-                  <View key={tx.id} style={styles.txRow}>
-                    <View style={[styles.txIcon, { backgroundColor: tx.type === 'top_up' ? 'rgba(16,185,129,0.15)' : 'rgba(244,63,94,0.15)' }]}>
-                      <Text style={{ fontSize: 16 }}>{tx.type === 'top_up' ? '↓' : '↑'}</Text>
+                  <View key={tx.id} style={[styles.txRow, { borderBottomColor: colors.border }]}>
+                    <View style={[styles.txIcon, { backgroundColor: tx.type === 'top_up' ? `${colors.success}18` : `${colors.danger}18` }]}>
+                      <Text style={{ fontSize: 16, color: tx.type === 'top_up' ? colors.success : colors.danger }}>
+                        {tx.type === 'top_up' ? '↓' : '↑'}
+                      </Text>
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ color: COLORS.text, fontWeight: '600', fontSize: 13 }}>{tx.note || tx.type}</Text>
-                      <Text style={{ color: COLORS.textDim, fontSize: 11 }}>{new Date(tx.created_at).toLocaleDateString()}</Text>
+                      <Text style={{ color: colors.text, fontWeight: '600', fontSize: 13 }}>{tx.note || tx.type}</Text>
+                      <Text style={{ color: colors.textDim, fontSize: 11 }}>{new Date(tx.created_at).toLocaleDateString()}</Text>
                     </View>
-                    <Text style={{ color: tx.type === 'top_up' ? COLORS.success : COLORS.danger, fontWeight: '700', fontSize: 14 }}>
+                    <Text style={{ color: tx.type === 'top_up' ? colors.success : colors.danger, fontWeight: '700', fontSize: 14 }}>
                       {tx.type === 'top_up' ? '+' : '-'}${parseFloat(tx.amount_usdt).toFixed(2)}
                     </Text>
                   </View>
                 ))}
-              </Card>
+              </View>
             </>
           )}
         </ScrollView>
       )}
 
-      {/* ── Apply Modal ── */}
+      {/* Apply Modal */}
       <Modal visible={applyModal} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>Apply for Virtual Card</Text>
-            <ScrollView>
+        <View style={styles.overlay}>
+          <View style={[styles.sheet, { backgroundColor: colors.surface }]}>
+            <View style={[styles.handle, { backgroundColor: colors.border2 }]} />
+            <Text style={[styles.sheetTitle, { color: colors.text }]}>Apply for Virtual Card</Text>
+            <ScrollView keyboardShouldPersistTaps="handled">
               <Input label="Cardholder Name" value={applyName} onChangeText={setApplyName} placeholder="As on official ID" autoCapitalize="words" />
-
-              <Text style={styles.label}>Card Network</Text>
+              <Text style={[styles.formLabel, { color: colors.textSub }]}>Card Network</Text>
               <View style={{ flexDirection: 'row', gap: 8, marginBottom: SPACING.md }}>
                 {['VISA', 'MASTERCARD'].map(n => (
-                  <TouchableOpacity key={n} style={[styles.netBtn, applyNetwork === n && styles.netBtnActive]} onPress={() => setApplyNetwork(n)}>
-                    <Text style={{ color: applyNetwork === n ? COLORS.accent : COLORS.textMuted, fontWeight: '700' }}>{n}</Text>
+                  <TouchableOpacity
+                    key={n}
+                    style={[styles.netBtn, { backgroundColor: applyNetwork === n ? colors.accentDim : colors.surface2, borderColor: applyNetwork === n ? `${colors.accent}60` : colors.border }]}
+                    onPress={() => setApplyNetwork(n)}>
+                    <Text style={{ color: applyNetwork === n ? colors.accent : colors.textSub, fontWeight: '700' }}>{n}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
-
-              <Text style={styles.label}>Select Variant</Text>
+              <Text style={[styles.formLabel, { color: colors.textSub }]}>Select Variant</Text>
               {variants.map(v => (
-                <TouchableOpacity key={v.id} style={[styles.variantRow, applyVariant?.id === v.id && styles.variantRowActive]}
+                <TouchableOpacity
+                  key={v.id}
+                  style={[styles.variantRow, { backgroundColor: applyVariant?.id === v.id ? colors.accentDim : colors.surface2, borderColor: applyVariant?.id === v.id ? `${colors.accent}60` : colors.border }]}
                   onPress={() => setApplyVariant(v)}>
                   <LinearGradient colors={[v.color_from, v.color_to]} style={styles.variantColor} />
                   <View style={{ flex: 1 }}>
-                    <Text style={{ color: COLORS.text, fontWeight: '700', fontSize: 14 }}>{v.name}</Text>
-                    <Text style={{ color: COLORS.textMuted, fontSize: 11 }}>Limit: ${v.limit_usd} · Fee: ${v.fee_usd}</Text>
-                    <Text style={{ color: COLORS.textDim, fontSize: 11 }}>{v.description}</Text>
+                    <Text style={{ color: colors.text, fontWeight: '700', fontSize: 14 }}>{v.name}</Text>
+                    <Text style={{ color: colors.textSub, fontSize: 11 }}>Limit: ${v.limit_usd} · Fee: ${v.fee_usd}</Text>
+                    <Text style={{ color: colors.textDim, fontSize: 11 }}>{v.description}</Text>
                   </View>
-                  {applyVariant?.id === v.id && <Text style={{ color: COLORS.accent, fontSize: 18 }}>✓</Text>}
+                  {applyVariant?.id === v.id && <Text style={{ color: colors.accent, fontSize: 18 }}>✓</Text>}
                 </TouchableOpacity>
               ))}
-
-              <Alert type="info" style={{ marginTop: 8 }}>Card fee will be deducted from your wallet balance. Requires completed KYC.</Alert>
-
+              <Alert type="info" style={{ marginTop: 8 }}>Card fee will be deducted from your wallet. Requires completed KYC.</Alert>
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
                 <SecondaryButton title="Cancel" onPress={() => setApplyModal(false)} style={{ flex: 1 }} />
                 <PrimaryButton title="Apply" onPress={handleApply} loading={applyLoading} style={{ flex: 1 }} />
@@ -323,12 +327,13 @@ export default function VirtualCardScreen({ navigation }) {
         </View>
       </Modal>
 
-      {/* ── Top-Up Modal ── */}
+      {/* Top-Up Modal */}
       <Modal visible={topUpModal} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalSheet, { maxHeight: 320 }]}>
-            <Text style={styles.modalTitle}>Top Up Card</Text>
-            <Text style={{ color: COLORS.textMuted, fontSize: 13, marginBottom: SPACING.md }}>Transfer USDT from your wallet to this card.</Text>
+        <View style={styles.overlay}>
+          <View style={[styles.sheet, { backgroundColor: colors.surface, maxHeight: 300 }]}>
+            <View style={[styles.handle, { backgroundColor: colors.border2 }]} />
+            <Text style={[styles.sheetTitle, { color: colors.text }]}>Top Up Card</Text>
+            <Text style={{ color: colors.textSub, fontSize: 13, marginBottom: SPACING.md }}>Transfer USDT from wallet to card.</Text>
             <Input label="Amount (USDT)" value={topUpAmt} onChangeText={setTopUpAmt} keyboardType="decimal-pad" placeholder="0.00" />
             <View style={{ flexDirection: 'row', gap: 8 }}>
               <SecondaryButton title="Cancel" onPress={() => setTopUpModal(false)} style={{ flex: 1 }} />
@@ -338,11 +343,12 @@ export default function VirtualCardScreen({ navigation }) {
         </View>
       </Modal>
 
-      {/* ── Spend Modal ── */}
+      {/* Spend Modal */}
       <Modal visible={spendModal} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalSheet, { maxHeight: 360 }]}>
-            <Text style={styles.modalTitle}>Simulate Spend</Text>
+        <View style={styles.overlay}>
+          <View style={[styles.sheet, { backgroundColor: colors.surface, maxHeight: 340 }]}>
+            <View style={[styles.handle, { backgroundColor: colors.border2 }]} />
+            <Text style={[styles.sheetTitle, { color: colors.text }]}>Simulate Spend</Text>
             <Input label="Amount (USDT)" value={spendAmt} onChangeText={setSpendAmt} keyboardType="decimal-pad" placeholder="0.00" />
             <Input label="Note (optional)" value={spendNote} onChangeText={setSpendNote} placeholder="e.g. Amazon purchase" />
             <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -357,46 +363,39 @@ export default function VirtualCardScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  safe:   { flex: 1, backgroundColor: COLORS.bg },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: SPACING.md, paddingVertical: 12 },
-  headerTitle: { fontSize: 22, fontWeight: '800', color: COLORS.text },
-  addBtn: { backgroundColor: COLORS.accentDim, borderRadius: RADIUS.md, paddingHorizontal: 14, paddingVertical: 7, borderWidth: 1, borderColor: 'rgba(124,111,247,0.3)' },
-  centered:  { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  emptyWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: SPACING.xl },
-  emptyTitle: { fontSize: 22, fontWeight: '800', color: COLORS.text, marginBottom: 8 },
-  emptyText:  { color: COLORS.textMuted, textAlign: 'center', lineHeight: 20, marginBottom: 24 },
-  scroll: { padding: SPACING.md, paddingBottom: 40 },
+  safe:       { flex: 1 },
+  header:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: SPACING.lg, paddingVertical: 14 },
+  headerTitle:{ fontSize: 24, fontWeight: '800', letterSpacing: -0.5 },
+  addBtn:     { paddingHorizontal: 16, paddingVertical: 8, borderRadius: RADIUS.full, borderWidth: 1 },
+  centered:   { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  emptyWrap:  { flex: 1, justifyContent: 'center', alignItems: 'center', padding: SPACING.xl },
+  emptyTitle: { fontSize: 22, fontWeight: '800', marginBottom: 8 },
+  scroll:     { padding: SPACING.lg, paddingBottom: 100 },
   cardVisual: { width: CARD_W, height: CARD_W * 0.58, borderRadius: 20, padding: SPACING.lg, justifyContent: 'space-between', marginBottom: SPACING.md },
-  chip: { width: 38, height: 28, borderRadius: 5, backgroundColor: 'rgba(255,255,255,0.4)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
-  cardNetworkBadge: { position: 'absolute', top: SPACING.md, right: SPACING.md },
+  chip:       { width: 38, height: 28, borderRadius: 5, backgroundColor: 'rgba(255,255,255,0.4)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
+  cardNetBadge:{ position: 'absolute', top: SPACING.md, right: SPACING.md },
   cardNumber: { fontSize: 18, fontWeight: '700', color: '#fff', letterSpacing: 3, fontFamily: Platform.OS === 'ios' ? 'Courier New' : 'monospace' },
   cardBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
-  cardSmallLabel: { fontSize: 8, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 },
-  cardSmallValue: { fontSize: 12, color: '#fff', fontWeight: '700', fontFamily: Platform.OS === 'ios' ? 'Courier New' : 'monospace' },
+  cardSmLabel:{ fontSize: 8, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 },
+  cardSmValue:{ fontSize: 12, color: '#fff', fontWeight: '700', fontFamily: Platform.OS === 'ios' ? 'Courier New' : 'monospace' },
   revealHint: { position: 'absolute', bottom: 8, right: 12 },
-  detailsStrip: { flexDirection: 'row', backgroundColor: COLORS.surface, borderRadius: RADIUS.md, marginBottom: SPACING.md, borderWidth: 1, borderColor: COLORS.border },
-  detailItem: { flex: 1, alignItems: 'center', paddingVertical: 12, borderRightWidth: 1, borderRightColor: COLORS.border },
-  detailLabel: { fontSize: 9, color: COLORS.textDim, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
-  detailValue: { fontSize: 13, fontWeight: '700', color: COLORS.text },
-  copyStrip: { backgroundColor: COLORS.surface2, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border, marginBottom: SPACING.md, overflow: 'hidden' },
-  copyItem: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING.md, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: COLORS.border, gap: 10 },
-  copyLabel: { fontSize: 11, color: COLORS.textMuted, width: 90 },
-  copyValue: { flex: 1, color: COLORS.text, fontFamily: Platform.OS === 'ios' ? 'Courier New' : 'monospace', fontSize: 13, fontWeight: '600' },
-  actionRow: { flexDirection: 'row', gap: 10, marginBottom: SPACING.md },
-  actionBtn: { flex: 1, backgroundColor: COLORS.surface, borderRadius: RADIUS.lg, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
-  actionLabel: { color: COLORS.textMuted, fontSize: 11, fontWeight: '600' },
-  sectionLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', color: COLORS.textMuted, marginBottom: 12 },
-  txRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: COLORS.border, gap: 12 },
-  txIcon: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
-  label: { fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', color: COLORS.textMuted, marginBottom: 6 },
-  cardTab: { paddingHorizontal: 14, paddingVertical: 8, backgroundColor: COLORS.surface2, borderRadius: 100, marginRight: 8, borderWidth: 1, borderColor: COLORS.border },
-  cardTabActive: { borderColor: COLORS.accent, backgroundColor: COLORS.accentDim },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'flex-end' },
-  modalSheet: { backgroundColor: COLORS.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: SPACING.lg, maxHeight: '85%' },
-  modalTitle: { fontSize: 20, fontWeight: '800', color: COLORS.text, marginBottom: SPACING.md },
-  netBtn: { flex: 1, padding: 12, borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: COLORS.border, alignItems: 'center', backgroundColor: COLORS.surface2 },
-  netBtnActive: { borderColor: COLORS.accent, backgroundColor: COLORS.accentDim },
-  variantRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: RADIUS.md, backgroundColor: COLORS.surface2, borderWidth: 1, borderColor: COLORS.border, marginBottom: 8 },
-  variantRowActive: { borderColor: COLORS.accent, backgroundColor: COLORS.accentDim },
-  variantColor: { width: 40, height: 40, borderRadius: 10 },
+  detailsStrip:{ flexDirection: 'row', borderRadius: RADIUS.md, borderWidth: 1, marginBottom: SPACING.md },
+  detailItem: { flex: 1, alignItems: 'center', paddingVertical: 12 },
+  copyStrip:  { borderRadius: RADIUS.md, borderWidth: 1, marginBottom: SPACING.md, overflow: 'hidden' },
+  copyItem:   { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING.md, paddingVertical: 12, borderBottomWidth: 1, gap: 10 },
+  actionRow:  { flexDirection: 'row', gap: 10, marginBottom: SPACING.md },
+  actionBtn:  { flex: 1, borderRadius: RADIUS.lg, padding: 14, alignItems: 'center', borderWidth: 1 },
+  card:       { borderRadius: RADIUS.lg, padding: SPACING.lg, marginBottom: SPACING.md, borderWidth: 1 },
+  sectionLabel:{ fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 },
+  txRow:      { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, gap: 12 },
+  txIcon:     { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+  cardTab:    { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 100, marginRight: 8, borderWidth: 1 },
+  overlay:    { flex: 1, backgroundColor: 'rgba(0,0,0,0.75)', justifyContent: 'flex-end' },
+  sheet:      { borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: SPACING.lg, maxHeight: '90%' },
+  handle:     { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: 16 },
+  sheetTitle: { fontSize: 20, fontWeight: '800', marginBottom: SPACING.md },
+  formLabel:  { fontSize: 12, fontWeight: '700', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 8 },
+  netBtn:     { flex: 1, padding: 12, borderRadius: RADIUS.md, borderWidth: 1.5, alignItems: 'center' },
+  variantRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: RADIUS.md, borderWidth: 1, marginBottom: 8 },
+  variantColor:{ width: 40, height: 40, borderRadius: 10 },
 })

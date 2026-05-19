@@ -4,6 +4,7 @@ import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   Share, Platform, TextInput,
 } from 'react-native'
+import { useTheme } from '../../context/ThemeContext'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import QRCode from 'react-native-qrcode-svg'
 import * as Clipboard from 'expo-clipboard'
@@ -15,6 +16,7 @@ import Toast from 'react-native-toast-message'
 
 const ACCEPTED_COINS = ['ETH', 'USDT', 'BNB', 'MATIC', 'TRX', 'BTC', 'USDC', 'DAI']
 const CATEGORIES = ['Retail', 'Food & Beverage', 'Services', 'Technology', 'Travel', 'Healthcare', 'Education', 'Other']
+const { colors } = useTheme()
 
 export default function MerchantScreen({ navigation }) {
   const { user, activeWallet } = useApp()
@@ -101,7 +103,7 @@ export default function MerchantScreen({ navigation }) {
         <Text style={styles.headerTitle}>Merchant QR</Text>
         {profile && !editMode && (
           <TouchableOpacity style={styles.editBtn} onPress={() => setEditMode(true)}>
-            <Text style={{ color: COLORS.accent, fontWeight: '700', fontSize: 13 }}>✏️ Edit</Text>
+            <Text style={{ color: colors.accent, fontWeight: '700', fontSize: 13 }}>✏️ Edit</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -130,7 +132,7 @@ export default function MerchantScreen({ navigation }) {
             <View style={styles.coinGrid}>
               {ACCEPTED_COINS.map(c => (
                 <TouchableOpacity key={c} style={[styles.coinBtn, coins.includes(c) && styles.coinBtnActive]} onPress={() => toggleCoin(c)}>
-                  <Text style={[styles.coinBtnText, coins.includes(c) && { color: COLORS.accent }]}>{c}</Text>
+                  <Text style={[styles.coinBtnText, coins.includes(c) && { color: colors.accent }]}>{c}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -170,12 +172,12 @@ export default function MerchantScreen({ navigation }) {
                 <TextInput
                   style={styles.amtInput}
                   placeholder="0.00"
-                  placeholderTextColor={COLORS.textDim}
+                  placeholderTextColor={colors.textDim}
                   value={qrAmount}
                   onChangeText={setQrAmount}
                   keyboardType="decimal-pad"
                 />
-                <Text style={{ color: COLORS.textMuted, fontSize: 14, fontWeight: '600' }}>USDT</Text>
+                <Text style={{ color: colors.textMuted, fontSize: 14, fontWeight: '600' }}>USDT</Text>
               </View>
             </Card>
 
@@ -183,7 +185,7 @@ export default function MerchantScreen({ navigation }) {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: SPACING.md }}>
               {['all', ...coins].map(c => (
                 <TouchableOpacity key={c} style={[styles.qrTab, activeQR === c && styles.qrTabActive, { marginRight: 8 }]} onPress={() => setActiveQR(c)}>
-                  <Text style={[styles.qrTabText, activeQR === c && { color: COLORS.accent }]}>
+                  <Text style={[styles.qrTabText, activeQR === c && { color: colors.accent }]}>
                     {c === 'all' ? '🌐 All-in-One' : c}
                   </Text>
                 </TouchableOpacity>
@@ -198,7 +200,7 @@ export default function MerchantScreen({ navigation }) {
               {qrAmount ? (
                 <Text style={styles.qrAmount}>Requesting: {qrAmount} USDT</Text>
               ) : (
-                <Text style={{ color: COLORS.textDim, fontSize: 12, marginBottom: 16 }}>Any amount</Text>
+                <Text style={{ color: colors.textDim, fontSize: 12, marginBottom: 16 }}>Any amount</Text>
               )}
               <View style={styles.qrWrap}>
                 <QRCode
@@ -237,7 +239,7 @@ export default function MerchantScreen({ navigation }) {
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                 {profile.accepted_coins?.map(c => (
                   <View key={c} style={styles.coinChip}>
-                    <Text style={{ color: COLORS.accent, fontWeight: '700', fontSize: 12 }}>{c}</Text>
+                    <Text style={{ color: colors.accent, fontWeight: '700', fontSize: 12 }}>{c}</Text>
                   </View>
                 ))}
               </View>
@@ -253,38 +255,38 @@ export default function MerchantScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  safe:    { flex: 1, backgroundColor: COLORS.bg },
+  safe:    { flex: 1, backgroundColor: colors.bg },
   header:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: SPACING.md, paddingVertical: 12 },
-  headerTitle: { fontSize: 22, fontWeight: '800', color: COLORS.text },
-  editBtn: { backgroundColor: COLORS.accentDim, borderRadius: RADIUS.md, paddingHorizontal: 14, paddingVertical: 7, borderWidth: 1, borderColor: 'rgba(124,111,247,0.3)' },
-  centered:{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.bg },
+  headerTitle: { fontSize: 22, fontWeight: '800', color: colors.text },
+  editBtn: { backgroundColor: colors.accentDim, borderRadius: RADIUS.md, paddingHorizontal: 14, paddingVertical: 7, borderWidth: 1, borderColor: 'rgba(124,111,247,0.3)' },
+  centered:{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg },
   scroll:  { padding: SPACING.md, paddingBottom: 40 },
-  cardTitle: { fontSize: 20, fontWeight: '800', color: COLORS.text, marginBottom: 6 },
-  cardDesc:  { fontSize: 13, color: COLORS.textMuted, lineHeight: 19, marginBottom: SPACING.md },
-  label:     { fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', color: COLORS.textMuted, marginBottom: 8 },
-  sectionLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', color: COLORS.textMuted, marginBottom: 12 },
-  pill: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 100, backgroundColor: COLORS.surface2, borderWidth: 1, borderColor: COLORS.border },
-  pillActive: { backgroundColor: COLORS.accentDim, borderColor: 'rgba(124,111,247,0.4)' },
-  pillText:   { fontSize: 12, fontWeight: '600', color: COLORS.textMuted },
-  pillTextActive: { color: COLORS.accent },
+  cardTitle: { fontSize: 20, fontWeight: '800', color: colors.text, marginBottom: 6 },
+  cardDesc:  { fontSize: 13, color: colors.textMuted, lineHeight: 19, marginBottom: SPACING.md },
+  label:     { fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', color: colors.textMuted, marginBottom: 8 },
+  sectionLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', color: colors.textMuted, marginBottom: 12 },
+  pill: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 100, backgroundColor: colors.surface2, borderWidth: 1, borderColor: colors.border },
+  pillActive: { backgroundColor: colors.accentDim, borderColor: 'rgba(124,111,247,0.4)' },
+  pillText:   { fontSize: 12, fontWeight: '600', color: colors.textMuted },
+  pillTextActive: { color: colors.accent },
   coinGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: SPACING.md },
-  coinBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 100, borderWidth: 1, borderColor: COLORS.border, backgroundColor: COLORS.surface2 },
-  coinBtnActive: { borderColor: COLORS.accent, backgroundColor: COLORS.accentDim },
-  coinBtnText: { fontSize: 12, fontWeight: '700', color: COLORS.textMuted },
-  coinChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 100, backgroundColor: COLORS.accentDim, borderWidth: 1, borderColor: 'rgba(124,111,247,0.3)' },
+  coinBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 100, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface2 },
+  coinBtnActive: { borderColor: colors.accent, backgroundColor: colors.accentDim },
+  coinBtnText: { fontSize: 12, fontWeight: '700', color: colors.textMuted },
+  coinChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 100, backgroundColor: colors.accentDim, borderWidth: 1, borderColor: 'rgba(124,111,247,0.3)' },
   bizCard:  {},
-  bizAvatar: { width: 52, height: 52, borderRadius: 14, backgroundColor: COLORS.surface3, justifyContent: 'center', alignItems: 'center' },
-  bizName:  { fontSize: 18, fontWeight: '800', color: COLORS.text },
-  bizMeta:  { fontSize: 12, color: COLORS.textMuted, marginTop: 2 },
-  amtRow:   { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.surface2, borderRadius: RADIUS.md, paddingHorizontal: 14, borderWidth: 1.5, borderColor: COLORS.border, gap: 10 },
-  amtInput: { flex: 1, fontSize: 24, fontWeight: '700', color: COLORS.text, paddingVertical: 14, fontFamily: Platform.OS === 'ios' ? 'Courier New' : 'monospace' },
-  qrTab: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 100, backgroundColor: COLORS.surface2, borderWidth: 1, borderColor: COLORS.border },
-  qrTabActive: { backgroundColor: COLORS.accentDim, borderColor: 'rgba(124,111,247,0.4)' },
-  qrTabText: { fontSize: 12, fontWeight: '700', color: COLORS.textMuted },
-  qrLabel:  { fontSize: 14, fontWeight: '700', color: COLORS.text, marginBottom: 4 },
-  qrAmount: { fontSize: 13, color: COLORS.accent, fontWeight: '600', marginBottom: 16 },
+  bizAvatar: { width: 52, height: 52, borderRadius: 14, backgroundColor: colors.surface3, justifyContent: 'center', alignItems: 'center' },
+  bizName:  { fontSize: 18, fontWeight: '800', color: colors.text },
+  bizMeta:  { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  amtRow:   { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface2, borderRadius: RADIUS.md, paddingHorizontal: 14, borderWidth: 1.5, borderColor: colors.border, gap: 10 },
+  amtInput: { flex: 1, fontSize: 24, fontWeight: '700', color: colors.text, paddingVertical: 14, fontFamily: Platform.OS === 'ios' ? 'Courier New' : 'monospace' },
+  qrTab: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 100, backgroundColor: colors.surface2, borderWidth: 1, borderColor: colors.border },
+  qrTabActive: { backgroundColor: colors.accentDim, borderColor: 'rgba(124,111,247,0.4)' },
+  qrTabText: { fontSize: 12, fontWeight: '700', color: colors.textMuted },
+  qrLabel:  { fontSize: 14, fontWeight: '700', color: colors.text, marginBottom: 4 },
+  qrAmount: { fontSize: 13, color: colors.accent, fontWeight: '600', marginBottom: 16 },
   qrWrap:   { backgroundColor: '#fff', borderRadius: 20, padding: 14, marginBottom: 14, shadowColor: '#7c6ff7', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 8 },
-  scanHint: { fontSize: 11, color: COLORS.textDim, marginBottom: 14 },
-  addrBox:  { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.surface2, borderRadius: RADIUS.md, padding: 12, borderWidth: 1, borderColor: COLORS.border, gap: 8, width: '100%' },
-  addrText: { flex: 1, fontFamily: Platform.OS === 'ios' ? 'Courier New' : 'monospace', fontSize: 11, color: COLORS.text },
+  scanHint: { fontSize: 11, color: colors.textDim, marginBottom: 14 },
+  addrBox:  { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface2, borderRadius: RADIUS.md, padding: 12, borderWidth: 1, borderColor: colors.border, gap: 8, width: '100%' },
+  addrText: { flex: 1, fontFamily: Platform.OS === 'ios' ? 'Courier New' : 'monospace', fontSize: 11, color: colors.text },
 })

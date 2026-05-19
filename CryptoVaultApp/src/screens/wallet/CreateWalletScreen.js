@@ -1,5 +1,6 @@
 // src/screens/wallet/CreateWalletScreen.js
 import React, { useState } from 'react'
+import { useTheme } from '../../context/ThemeContext'
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, TextInput, Alert as RNAlert,
@@ -15,6 +16,7 @@ import { Card, PrimaryButton, SecondaryButton, Alert, Input } from '../../compon
 import Toast from 'react-native-toast-message'
 
 const STEPS = ['Generate', 'Backup', 'Verify', 'Secure']
+const { colors } = useTheme()
 
 export default function CreateWalletScreen({ navigation }) {
   const { loadWallets, activeNetwork } = useApp()
@@ -80,11 +82,11 @@ export default function CreateWalletScreen({ navigation }) {
           {STEPS.map((s, i) => (
             <View key={s} style={{ alignItems: 'center', flex: 1 }}>
               <View style={[styles.stepDot, i < step && styles.stepDone, i === step && styles.stepActive]}>
-                <Text style={{ fontSize: 11, fontWeight: '700', color: i <= step ? '#fff' : COLORS.textMuted }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: i <= step ? '#fff' : colors.textMuted }}>
                   {i < step ? '✓' : i + 1}
                 </Text>
               </View>
-              <Text style={{ fontSize: 9, marginTop: 4, color: i === step ? COLORS.accent : COLORS.textDim }}>{s}</Text>
+              <Text style={{ fontSize: 9, marginTop: 4, color: i === step ? colors.accent : colors.textDim }}>{s}</Text>
             </View>
           ))}
         </View>
@@ -117,7 +119,7 @@ export default function CreateWalletScreen({ navigation }) {
             {!revealed ? (
               <TouchableOpacity style={styles.revealBtn} onPress={() => setRevealed(true)}>
                 <Text style={{ fontSize: 28 }}>👁</Text>
-                <Text style={{ color: COLORS.textMuted, marginTop: 8, fontWeight: '600' }}>Tap to reveal seed phrase</Text>
+                <Text style={{ color: colors.textMuted, marginTop: 8, fontWeight: '600' }}>Tap to reveal seed phrase</Text>
               </TouchableOpacity>
             ) : (
               <>
@@ -130,7 +132,7 @@ export default function CreateWalletScreen({ navigation }) {
                   ))}
                 </View>
                 <TouchableOpacity style={styles.copyBtn} onPress={async () => { await Clipboard.setStringAsync(walletData.mnemonic); Toast.show({ type: 'success', text1: 'Copied!' }) }}>
-                  <Text style={{ color: COLORS.accent, fontWeight: '600' }}>📋 Copy to clipboard</Text>
+                  <Text style={{ color: colors.accent, fontWeight: '600' }}>📋 Copy to clipboard</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -149,13 +151,13 @@ export default function CreateWalletScreen({ navigation }) {
             <Text style={styles.cardDesc}>Enter the requested words to confirm you've saved your seed phrase.</Text>
             {verifyIdxs.map(idx => (
               <View key={idx} style={{ marginBottom: SPACING.md }}>
-                <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', color: COLORS.textMuted, marginBottom: 6 }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', color: colors.textMuted, marginBottom: 6 }}>
                   Word #{idx + 1}
                 </Text>
                 <TextInput
                   style={styles.verifyInput}
                   placeholder={`Enter word #${idx + 1}`}
-                  placeholderTextColor={COLORS.textDim}
+                  placeholderTextColor={colors.textDim}
                   value={verifyWords[idx] || ''}
                   onChangeText={t => setVerifyWords(p => ({ ...p, [idx]: t }))}
                   autoCapitalize="none"
@@ -191,36 +193,36 @@ export default function CreateWalletScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  safe:   { flex: 1, backgroundColor: COLORS.bg },
+  safe:   { flex: 1, backgroundColor: colors.bg },
   scroll: { padding: SPACING.lg, paddingBottom: 40 },
   progressRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
   stepDot: {
     width: 28, height: 28, borderRadius: 14, justifyContent: 'center', alignItems: 'center',
-    backgroundColor: COLORS.surface2, borderWidth: 1.5, borderColor: COLORS.border,
+    backgroundColor: colors.surface2, borderWidth: 1.5, borderColor: colors.border,
   },
-  stepActive: { backgroundColor: 'rgba(124,111,247,0.2)', borderColor: COLORS.accent },
-  stepDone:   { backgroundColor: COLORS.accent, borderColor: COLORS.accent },
-  progressBar:  { height: 3, backgroundColor: COLORS.border, borderRadius: 2, marginBottom: SPACING.lg },
-  progressFill: { height: 3, backgroundColor: COLORS.accent, borderRadius: 2 },
+  stepActive: { backgroundColor: 'rgba(124,111,247,0.2)', borderColor: colors.accent },
+  stepDone:   { backgroundColor: colors.accent, borderColor: colors.accent },
+  progressBar:  { height: 3, backgroundColor: colors.border, borderRadius: 2, marginBottom: SPACING.lg },
+  progressFill: { height: 3, backgroundColor: colors.accent, borderRadius: 2 },
   emoji: { fontSize: 52, textAlign: 'center', marginBottom: 12 },
-  cardTitle: { fontSize: 20, fontWeight: '800', color: COLORS.text, marginBottom: 6 },
-  cardDesc: { fontSize: 14, color: COLORS.textMuted, lineHeight: 20, marginBottom: SPACING.md },
+  cardTitle: { fontSize: 20, fontWeight: '800', color: colors.text, marginBottom: 6 },
+  cardDesc: { fontSize: 14, color: colors.textMuted, lineHeight: 20, marginBottom: SPACING.md },
   revealBtn: {
-    backgroundColor: COLORS.surface2, borderRadius: RADIUS.md,
+    backgroundColor: colors.surface2, borderRadius: RADIUS.md,
     padding: SPACING.lg * 1.5, alignItems: 'center', marginBottom: SPACING.md,
-    borderWidth: 1, borderColor: COLORS.border,
+    borderWidth: 1, borderColor: colors.border,
   },
   seedGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: SPACING.md },
   seedWord: {
-    width: '30%', backgroundColor: COLORS.surface2, borderRadius: RADIUS.sm,
-    padding: 8, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: COLORS.border,
+    width: '30%', backgroundColor: colors.surface2, borderRadius: RADIUS.sm,
+    padding: 8, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.border,
   },
-  seedNum: { fontSize: 10, color: COLORS.textDim, marginRight: 4, minWidth: 16 },
-  seedTxt: { fontSize: 13, color: COLORS.text, fontFamily: 'monospace', fontWeight: '500' },
+  seedNum: { fontSize: 10, color: colors.textDim, marginRight: 4, minWidth: 16 },
+  seedTxt: { fontSize: 13, color: colors.text, fontFamily: 'monospace', fontWeight: '500' },
   copyBtn: { alignItems: 'center', paddingVertical: 12, marginBottom: SPACING.md },
   verifyInput: {
-    backgroundColor: COLORS.surface2, borderRadius: RADIUS.md,
-    padding: 12, color: COLORS.text, fontSize: 14, borderWidth: 1.5, borderColor: COLORS.border,
+    backgroundColor: colors.surface2, borderRadius: RADIUS.md,
+    padding: 12, color: colors.text, fontSize: 14, borderWidth: 1.5, borderColor: colors.border,
     fontFamily: 'monospace',
   },
   btnRow: { flexDirection: 'row', marginTop: SPACING.md },

@@ -3,9 +3,17 @@ import { supabase } from './client'
 
 // ── Wallets ────────────────────────────────────────────────────────────
 export const saveWallet = async ({ address, encryptedPrivateKey, network }) => {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
   const { data, error } = await supabase
     .from('wallets')
-    .insert({ address, encrypted_private_key: encryptedPrivateKey, network: network || 'eth_sepolia' })
+    .insert({
+      user_id: user.id,           // ← this was missing
+      address,
+      encrypted_private_key: encryptedPrivateKey,
+      network: network || 'eth_sepolia',
+    })
     .select().single()
   if (error) throw error
   return data

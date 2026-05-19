@@ -7,20 +7,22 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { fetchCoinMarkets, searchCoins, formatPrice, POPULAR_COINS } from '../../services/priceService'
 import { getWatchlist, addToWatchlist, removeFromWatchlist } from '../../services/supabase/watchlistService'
-import { COLORS, SPACING, RADIUS } from '../../utils/theme'
-import { Card, Spinner, SectionHeader } from '../../components/UI'
+import { useTheme } from '../../context/ThemeContext'
+import { SPACING, RADIUS } from '../../utils/theme'
+import { Card, Spinner } from '../../components/UI'
 import Toast from 'react-native-toast-message'
 
 export default function WatchlistScreen() {
-  const [tab,          setTab]          = useState('watchlist')
-  const [watchlist,    setWatchlist]    = useState([])
-  const [marketData,   setMarketData]   = useState([])
-  const [exploreData,  setExploreData]  = useState([])
-  const [searchQuery,  setSearchQuery]  = useState('')
-  const [searchResults,setSearchResults]= useState([])
-  const [loading,      setLoading]      = useState(true)
-  const [refreshing,   setRefreshing]   = useState(false)
-  const [watchlistIds, setWatchlistIds] = useState(new Set())
+  const { colors } = useTheme()
+  const [tab,           setTab]           = useState('watchlist')
+  const [watchlist,     setWatchlist]     = useState([])
+  const [marketData,    setMarketData]    = useState([])
+  const [exploreData,   setExploreData]   = useState([])
+  const [searchQuery,   setSearchQuery]   = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [loading,       setLoading]       = useState(true)
+  const [refreshing,    setRefreshing]    = useState(false)
+  const [watchlistIds,  setWatchlistIds]  = useState(new Set())
 
   const loadWatchlist = useCallback(async () => {
     try {
@@ -31,7 +33,8 @@ export default function WatchlistScreen() {
         const data = await fetchCoinMarkets(wl.map(w => w.coin_id))
         setMarketData(data)
       }
-    } catch {} finally { setLoading(false); setRefreshing(false) }
+    } catch {}
+    setLoading(false); setRefreshing(false)
   }, [])
 
   const loadExplore = useCallback(async () => {
@@ -76,90 +79,115 @@ export default function WatchlistScreen() {
     const change = coin.price_change_percentage_24h
     const isUp   = change >= 0
     return (
-      <TouchableOpacity style={styles.coinRow} activeOpacity={0.7} onPress={() => {}}>
-        <View style={styles.coinAvatar}>
-          <Text style={styles.coinAvatarText}>{coin.symbol?.slice(0, 3).toUpperCase()}</Text>
+      <View style={[styles.coinRow, { borderBottomColor: colors.border }]}>
+        <View style={[styles.coinAvatar, { backgroundColor: colors.surface2 }]}>
+          <Text style={{ fontSize: 10, fontWeight: '800', color: colors.accent }}>{coin.symbol?.slice(0, 3).toUpperCase()}</Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.coinSymbol}>{coin.symbol?.toUpperCase()}</Text>
-          <Text style={styles.coinName} numberOfLines={1}>{coin.name}</Text>
+          <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text }}>{coin.symbol?.toUpperCase()}</Text>
+          <Text style={{ fontSize: 11, color: colors.textSub, marginTop: 1 }} numberOfLines={1}>{coin.name}</Text>
         </View>
         <View style={{ alignItems: 'flex-end', marginRight: 12 }}>
-          <Text style={styles.coinPrice}>{formatPrice(coin.current_price)}</Text>
+          <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text, fontFamily: 'monospace' }}>
+            {formatPrice(coin.current_price)}
+          </Text>
           {change != null && (
-            <Text style={[styles.coinChange, { color: isUp ? COLORS.success : COLORS.danger }]}>
+            <Text style={{ fontSize: 12, fontWeight: '600', marginTop: 2, color: isUp ? colors.success : colors.danger }}>
               {isUp ? '▲' : '▼'} {Math.abs(change).toFixed(2)}%
             </Text>
           )}
         </View>
-        <TouchableOpacity style={[styles.starBtn, inWatchlist && styles.starBtnActive]} onPress={onToggle}>
-          <Text style={{ fontSize: 16 }}>{inWatchlist ? '⭐' : '☆'}</Text>
+        <TouchableOpacity
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: 11,
+            backgroundColor: inWatchlist
+              ? 'rgba(255,184,48,0.18)'
+              : colors.surface2,
+            borderWidth: 1.5,
+            borderColor: inWatchlist
+              ? 'rgba(255,184,48,0.6)'
+              : colors.border,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+          onPress={onToggle}>
+          <Text style={{ fontSize: 18 }}>{inWatchlist ? '⭐' : '☆'}</Text>
         </TouchableOpacity>
-      </TouchableOpacity>
+      </View>
     )
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Market</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Market</Text>
       </View>
 
       {/* Tabs */}
-      <View style={styles.tabRow}>
+      <View style={[styles.tabRow, { backgroundColor: colors.surface2, marginHorizontal: SPACING.lg }]}>
         {[['watchlist', '⭐ Watchlist'], ['explore', '🔍 Explore']].map(([k, label]) => (
-          <TouchableOpacity key={k} style={[styles.tab, tab === k && styles.tabActive]} onPress={() => setTab(k)}>
-            <Text style={[styles.tabText, tab === k && styles.tabTextActive]}>{label}</Text>
+          <TouchableOpacity
+            key={k}
+            style={[styles.tabBtn, tab === k && { backgroundColor: colors.surface }]}
+            onPress={() => setTab(k)}>
+            <Text style={[styles.tabLabel, { color: tab === k ? colors.text : colors.textSub }]}>{label}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
       <ScrollView
-        contentContainerStyle={styles.scroll}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadWatchlist(); loadExplore() }} tintColor={COLORS.accent} />}
+        contentContainerStyle={{ padding: SPACING.lg, paddingBottom: 100 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => { setRefreshing(true); loadWatchlist(); loadExplore() }}
+            tintColor={colors.accent}
+          />
+        }
       >
         {/* WATCHLIST TAB */}
         {tab === 'watchlist' && (
-          <>
-            {loading ? (
-              <View style={styles.centered}><Spinner /></View>
-            ) : watchlist.length === 0 ? (
-              <View style={styles.emptyWrap}>
-                <Text style={{ fontSize: 52, marginBottom: 12 }}>⭐</Text>
-                <Text style={styles.emptyTitle}>No coins yet</Text>
-                <Text style={styles.emptyDesc}>Switch to the Explore tab to add coins to your watchlist.</Text>
-                <TouchableOpacity onPress={() => setTab('explore')} style={styles.exploreBtn}>
-                  <Text style={{ color: COLORS.accent, fontWeight: '700' }}>Explore Markets →</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <Card style={{ padding: 0, overflow: 'hidden' }}>
-                {marketData.map((coin, i) => (
-                  <View key={coin.id}>
-                    <CoinRow
-                      coin={coin}
-                      inWatchlist={watchlistIds.has(coin.id)}
-                      onToggle={() => handleRemove(coin.id, coin.symbol?.toUpperCase())}
-                    />
-                    {i < marketData.length - 1 && <View style={styles.rowDivider} />}
-                  </View>
-                ))}
-              </Card>
-            )}
-          </>
+          loading ? (
+            <View style={styles.centered}><Spinner /></View>
+          ) : watchlist.length === 0 ? (
+            <View style={styles.emptyWrap}>
+              <Text style={{ fontSize: 52, marginBottom: 12 }}>⭐</Text>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>No coins yet</Text>
+              <Text style={{ color: colors.textSub, textAlign: 'center', lineHeight: 20, marginBottom: 24 }}>
+                Switch to the Explore tab to add coins to your watchlist.
+              </Text>
+              <TouchableOpacity
+                style={[styles.exploreBtn, { backgroundColor: colors.accentDim, borderColor: `${colors.accent}50` }]}
+                onPress={() => setTab('explore')}>
+                <Text style={{ color: colors.accent, fontWeight: '700' }}>Explore Markets →</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={[styles.listCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              {marketData.map((coin, i) => (
+                <CoinRow
+                  key={coin.id} coin={coin}
+                  inWatchlist={watchlistIds.has(coin.id)}
+                  onToggle={() => handleRemove(coin.id, coin.symbol?.toUpperCase())}
+                />
+              ))}
+            </View>
+          )
         )}
 
         {/* EXPLORE TAB */}
         {tab === 'explore' && (
           <>
-            {/* Search */}
-            <View style={styles.searchWrap}>
-              <Text style={styles.searchIcon}>🔍</Text>
+            {/* Search bar */}
+            <View style={[styles.searchWrap, { backgroundColor: colors.surface2, borderColor: colors.border }]}>
+              <Text style={{ fontSize: 16 }}>🔍</Text>
               <TextInput
-                style={styles.searchInput}
+                style={[styles.searchInput, { color: colors.text }]}
                 placeholder="Search by name or symbol…"
-                placeholderTextColor={COLORS.textDim}
+                placeholderTextColor={colors.textDim}
                 value={searchQuery}
                 onChangeText={handleSearch}
                 autoCapitalize="none"
@@ -167,45 +195,49 @@ export default function WatchlistScreen() {
               />
               {searchQuery.length > 0 && (
                 <TouchableOpacity onPress={() => { setSearchQuery(''); setSearchResults([]) }}>
-                  <Text style={{ color: COLORS.textMuted, fontSize: 18 }}>✕</Text>
+                  <Text style={{ color: colors.textSub, fontSize: 18 }}>✕</Text>
                 </TouchableOpacity>
               )}
             </View>
 
             {searchResults.length > 0 ? (
-              <Card style={{ padding: 0, overflow: 'hidden', marginBottom: SPACING.md }}>
-                <View style={styles.sectionHeader}><Text style={styles.sectionLabel}>Search Results</Text></View>
-                {searchResults.map((c, i) => (
-                  <View key={c.id}>
-                    <TouchableOpacity style={styles.searchResultRow} onPress={() => handleAdd(c)}>
-                      <View style={styles.coinAvatar}><Text style={styles.coinAvatarText}>{c.symbol?.slice(0, 3)}</Text></View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.coinSymbol}>{c.symbol}</Text>
-                        <Text style={styles.coinName}>{c.name}</Text>
-                      </View>
-                      <Text style={{ color: watchlistIds.has(c.id) ? COLORS.accent : COLORS.textMuted, fontSize: 22 }}>
-                        {watchlistIds.has(c.id) ? '⭐' : '+'}
-                      </Text>
-                    </TouchableOpacity>
-                    {i < searchResults.length - 1 && <View style={styles.rowDivider} />}
-                  </View>
+              <View style={[styles.listCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <View style={[styles.sectionHead, { borderBottomColor: colors.border }]}>
+                  <Text style={[styles.sectionLabel, { color: colors.textSub }]}>Search Results</Text>
+                </View>
+                {searchResults.map(c => (
+                  <TouchableOpacity key={c.id} style={[styles.coinRow, { borderBottomColor: colors.border }]} onPress={() => handleAdd(c)}>
+                    <View style={[styles.coinAvatar, { backgroundColor: colors.surface2 }]}>
+                      <Text style={{ fontSize: 10, fontWeight: '800', color: colors.accent }}>{c.symbol?.slice(0, 3)}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text }}>{c.symbol}</Text>
+                      <Text style={{ fontSize: 11, color: colors.textSub }}>{c.name}</Text>
+                    </View>
+                    <Text style={{ color: watchlistIds.has(c.id) ? colors.accent : colors.textSub, fontSize: 22 }}>
+                      {watchlistIds.has(c.id) ? '⭐' : '+'}
+                    </Text>
+                  </TouchableOpacity>
                 ))}
-              </Card>
+              </View>
             ) : (
               exploreData.length > 0 && (
-                <Card style={{ padding: 0, overflow: 'hidden' }}>
-                  <View style={styles.sectionHeader}><Text style={styles.sectionLabel}>Popular Coins</Text></View>
-                  {exploreData.map((coin, i) => (
-                    <View key={coin.id}>
-                      <CoinRow
-                        coin={coin}
-                        inWatchlist={watchlistIds.has(coin.id)}
-                        onToggle={() => watchlistIds.has(coin.id) ? handleRemove(coin.id, coin.symbol?.toUpperCase()) : handleAdd({ id: coin.id, symbol: coin.symbol?.toUpperCase(), name: coin.name })}
-                      />
-                      {i < exploreData.length - 1 && <View style={styles.rowDivider} />}
-                    </View>
+                <View style={[styles.listCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <View style={[styles.sectionHead, { borderBottomColor: colors.border }]}>
+                    <Text style={[styles.sectionLabel, { color: colors.textSub }]}>Popular Coins</Text>
+                  </View>
+                  {exploreData.map(coin => (
+                    <CoinRow
+                      key={coin.id} coin={coin}
+                      inWatchlist={watchlistIds.has(coin.id)}
+                      onToggle={() =>
+                        watchlistIds.has(coin.id)
+                          ? handleRemove(coin.id, coin.symbol?.toUpperCase())
+                          : handleAdd({ id: coin.id, symbol: coin.symbol?.toUpperCase(), name: coin.name })
+                      }
+                    />
                   ))}
-                </Card>
+                </View>
               )
             )}
           </>
@@ -216,34 +248,22 @@ export default function WatchlistScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.bg },
-  header: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.md, paddingBottom: 4 },
-  headerTitle: { fontSize: 26, fontWeight: '800', color: COLORS.text },
-  tabRow: { flexDirection: 'row', marginHorizontal: SPACING.lg, backgroundColor: COLORS.surface2, borderRadius: RADIUS.md, padding: 4, marginBottom: SPACING.md },
-  tab: { flex: 1, paddingVertical: 9, borderRadius: RADIUS.sm - 2, alignItems: 'center' },
-  tabActive: { backgroundColor: COLORS.surface },
-  tabText: { fontSize: 13, fontWeight: '600', color: COLORS.textMuted },
-  tabTextActive: { color: COLORS.text },
-  scroll:  { padding: SPACING.lg, paddingTop: 0, paddingBottom: 40 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 60 },
+  safe:      { flex: 1 },
+  header:    { paddingHorizontal: SPACING.lg, paddingTop: SPACING.md, paddingBottom: 4 },
+  headerTitle: { fontSize: 26, fontWeight: '800', letterSpacing: -0.5 },
+  tabRow:    { flexDirection: 'row', borderRadius: RADIUS.md, padding: 4, marginBottom: SPACING.md },
+  tabBtn:    { flex: 1, paddingVertical: 9, borderRadius: RADIUS.sm - 2, alignItems: 'center' },
+  tabLabel:  { fontSize: 13, fontWeight: '600' },
+  centered:  { paddingVertical: 60, alignItems: 'center' },
   emptyWrap: { alignItems: 'center', paddingVertical: 60 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: COLORS.text, marginBottom: 8 },
-  emptyDesc:  { fontSize: 14, color: COLORS.textMuted, textAlign: 'center', lineHeight: 20, marginBottom: 24 },
-  exploreBtn: { backgroundColor: COLORS.accentDim, paddingHorizontal: 20, paddingVertical: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(124,111,247,0.3)' },
-  coinRow: { flexDirection: 'row', alignItems: 'center', padding: SPACING.md, gap: 12 },
-  coinAvatar: { width: 40, height: 40, borderRadius: 12, backgroundColor: COLORS.surface3, justifyContent: 'center', alignItems: 'center' },
-  coinAvatarText: { fontSize: 11, fontWeight: '800', color: COLORS.accent },
-  coinSymbol: { fontSize: 14, fontWeight: '700', color: COLORS.text },
-  coinName:   { fontSize: 11, color: COLORS.textMuted, marginTop: 1 },
-  coinPrice:  { fontSize: 14, fontWeight: '700', color: COLORS.text, fontFamily: 'monospace' },
-  coinChange: { fontSize: 12, fontWeight: '600', marginTop: 2 },
-  starBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: COLORS.surface3, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
-  starBtnActive: { backgroundColor: 'rgba(245,158,11,0.12)', borderColor: 'rgba(245,158,11,0.3)' },
-  rowDivider: { height: 1, backgroundColor: COLORS.border, marginHorizontal: SPACING.md },
-  searchWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.surface2, borderRadius: RADIUS.md, padding: 12, borderWidth: 1, borderColor: COLORS.border, gap: 10, marginBottom: SPACING.md },
-  searchIcon:  { fontSize: 16 },
-  searchInput: { flex: 1, color: COLORS.text, fontSize: 14 },
-  searchResultRow: { flexDirection: 'row', alignItems: 'center', padding: SPACING.md, gap: 12 },
-  sectionHeader: { paddingHorizontal: SPACING.md, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: COLORS.border },
-  sectionLabel:  { fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', color: COLORS.textMuted },
+  emptyTitle:{ fontSize: 18, fontWeight: '700', marginBottom: 8 },
+  exploreBtn:{ paddingHorizontal: 20, paddingVertical: 10, borderRadius: RADIUS.md, borderWidth: 1 },
+  listCard:  { borderRadius: RADIUS.lg, borderWidth: 1, overflow: 'hidden' },
+  coinRow:   { flexDirection: 'row', alignItems: 'center', padding: SPACING.md, gap: 12, borderBottomWidth: 1 },
+  coinAvatar:{ width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  starBtn:   { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center', borderWidth: 1 },
+  searchWrap:{ flexDirection: 'row', alignItems: 'center', borderRadius: RADIUS.md, padding: 12, borderWidth: 1, gap: 10, marginBottom: SPACING.md },
+  searchInput:{ flex: 1, fontSize: 14 },
+  sectionHead:{ paddingHorizontal: SPACING.md, paddingVertical: 10, borderBottomWidth: 1 },
+  sectionLabel:{ fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' },
 })

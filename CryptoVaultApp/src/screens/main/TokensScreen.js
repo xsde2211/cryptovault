@@ -8,13 +8,16 @@ import { validateToken, getTokenBalance, isValidAddress, formatBalance } from '.
 import { saveToken, getTokens, deleteToken, tokenExists } from '../../services/supabase/walletDbService'
 import { getNetwork } from '../../utils/networks'
 import { useApp } from '../../context/AppContext'
-import { COLORS, SPACING, RADIUS } from '../../utils/theme'
+import { useTheme } from '../../context/ThemeContext'
+import { SPACING, RADIUS } from '../../utils/theme'
 import { Card, PrimaryButton, Alert, Spinner } from '../../components/UI'
 import Toast from 'react-native-toast-message'
 
-export default function TokensScreen({ navigation }) {
+export default function TokensScreen() {
   const { activeWallet, activeNetwork } = useApp()
+  const { colors } = useTheme()
   const network = getNetwork(activeNetwork)
+
   const [tokens,      setTokens]      = useState([])
   const [balances,    setBalances]    = useState({})
   const [loading,     setLoading]     = useState(true)
@@ -33,10 +36,14 @@ export default function TokensScreen({ navigation }) {
       setTokens(tks)
       const bals = {}
       await Promise.allSettled(tks.map(async tk => {
-        try { const info = await getTokenBalance(tk.contract_address, activeWallet.address, activeNetwork); bals[tk.contract_address] = info.balance } catch { bals[tk.contract_address] = null }
+        try {
+          const info = await getTokenBalance(tk.contract_address, activeWallet.address, activeNetwork)
+          bals[tk.contract_address] = info.balance
+        } catch { bals[tk.contract_address] = null }
       }))
       setBalances(bals)
-    } catch {} finally { setLoading(false); setRefreshing(false) }
+    } catch {}
+    setLoading(false); setRefreshing(false)
   }, [activeWallet, activeNetwork])
 
   useEffect(() => { loadTokens() }, [loadTokens])
@@ -48,7 +55,8 @@ export default function TokensScreen({ navigation }) {
     try {
       const info = await validateToken(contractAddr, activeNetwork)
       setPreview(info)
-    } catch { setError('Token not found on this network') } finally { setPrevLoading(false) }
+    } catch { setError('Token not found on this network') }
+    setPrevLoading(false)
   }
 
   const handleAdd = async () => {
@@ -61,7 +69,8 @@ export default function TokensScreen({ navigation }) {
       await loadTokens()
       setContractAddr(''); setPreview(null); setShowAdd(false)
       Toast.show({ type: 'success', text1: `${preview.symbol} added! ✅` })
-    } catch (err) { setError(err.message) } finally { setAddLoading(false) }
+    } catch (err) { setError(err.message) }
+    setAddLoading(false)
   }
 
   const handleDelete = (tk) => {
@@ -76,118 +85,117 @@ export default function TokensScreen({ navigation }) {
 
   return (
     <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.scroll}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadTokens() }} tintColor={COLORS.accent} />}
+      style={{ flex: 1, backgroundColor: colors.bg }}
+      contentContainerStyle={{ padding: SPACING.lg, paddingBottom: 60 }}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadTokens() }} tintColor={colors.accent} />
+      }
     >
-      {/* Add token panel */}
-      <Card style={{ marginBottom: SPACING.md }}>
+      {/* Add Token Panel */}
+      <View style={[styles.addCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <TouchableOpacity style={styles.addHeader} onPress={() => setShowAdd(v => !v)}>
-          <Text style={styles.addTitle}>+ Add ERC-20 Token</Text>
-          <Text style={{ color: COLORS.textMuted, fontSize: 18 }}>{showAdd ? '▲' : '▼'}</Text>
+          <Text style={{ fontSize: 15, fontWeight: '700', color: colors.accent }}>+ Add ERC-20 Token</Text>
+          <Text style={{ color: colors.textSub, fontSize: 18 }}>{showAdd ? '▲' : '▼'}</Text>
         </TouchableOpacity>
 
         {showAdd && (
-          <>
-            {error ? <Alert type="danger">{error}</Alert> : null}
-            <View style={{ marginBottom: SPACING.sm }}>
-              <Text style={styles.label}>Contract Address</Text>
-              <View style={styles.inputRow}>
-                <TextInput
-                  style={[styles.monoInput, { flex: 1, marginRight: 8 }]}
-                  placeholder="0x..."
-                  placeholderTextColor={COLORS.textDim}
-                  value={contractAddr}
-                  onChangeText={t => { setContractAddr(t); setPreview(null); setError('') }}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
-                <TouchableOpacity style={styles.lookupBtn} onPress={handlePreview} disabled={prevLoading}>
-                  {prevLoading ? <Spinner size="small" /> : <Text style={{ color: COLORS.accent, fontWeight: '700' }}>Look up</Text>}
-                </TouchableOpacity>
-              </View>
+          <View style={{ marginTop: SPACING.md }}>
+            {error ? <Alert type="danger" style={{ marginBottom: SPACING.md }}>{error}</Alert> : null}
+
+            <Text style={[styles.label, { color: colors.textSub }]}>Contract Address</Text>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <TextInput
+                style={[styles.monoInput, { flex: 1, backgroundColor: colors.surface2, borderColor: colors.border, color: colors.text }]}
+                placeholder="0x..."
+                placeholderTextColor={colors.textDim}
+                value={contractAddr}
+                onChangeText={t => { setContractAddr(t); setPreview(null); setError('') }}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <TouchableOpacity
+                style={[styles.lookupBtn, { backgroundColor: colors.accentDim, borderColor: `${colors.accent}50` }]}
+                onPress={handlePreview}
+                disabled={prevLoading}
+              >
+                {prevLoading ? <Spinner size="small" /> : <Text style={{ color: colors.accent, fontWeight: '700' }}>Look up</Text>}
+              </TouchableOpacity>
             </View>
 
             {preview && (
-              <View style={styles.previewBox}>
-                <View style={styles.previewRow}>
-                  <View style={styles.tokenAvatar}><Text style={styles.tokenAvatarText}>{preview.symbol.slice(0, 3)}</Text></View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ color: COLORS.text, fontWeight: '700', fontSize: 15 }}>{preview.symbol}</Text>
-                    <Text style={{ color: COLORS.textMuted, fontSize: 12 }}>{preview.name} · {preview.decimals} decimals</Text>
+              <View style={[styles.previewBox, { backgroundColor: colors.surface2, borderColor: `${colors.success}40` }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <View style={[styles.tokenAvatar, { backgroundColor: colors.accentDim }]}>
+                    <Text style={{ color: colors.accent, fontSize: 10, fontWeight: '800' }}>{preview.symbol.slice(0, 3)}</Text>
                   </View>
-                  <Text style={{ color: COLORS.success, fontSize: 18 }}>✓</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: colors.text, fontWeight: '700', fontSize: 15 }}>{preview.symbol}</Text>
+                    <Text style={{ color: colors.textSub, fontSize: 12 }}>{preview.name} · {preview.decimals} decimals</Text>
+                  </View>
+                  <Text style={{ color: colors.success, fontSize: 18 }}>✓</Text>
                 </View>
                 <PrimaryButton title={`Add ${preview.symbol}`} onPress={handleAdd} loading={addLoading} style={{ marginTop: 12 }} />
               </View>
             )}
-          </>
+          </View>
         )}
-      </Card>
+      </View>
 
       {/* Token list */}
       {loading ? (
-        <View style={styles.centered}><Spinner /></View>
+        <View style={{ paddingVertical: 60, alignItems: 'center' }}><Spinner /></View>
       ) : tokens.length === 0 ? (
-        <View style={styles.emptyWrap}>
+        <View style={{ alignItems: 'center', paddingVertical: 60 }}>
           <Text style={{ fontSize: 48, marginBottom: 12 }}>🪙</Text>
-          <Text style={styles.emptyTitle}>No ERC-20 Tokens</Text>
-          <Text style={styles.emptyDesc}>Add any ERC-20 token on {network.name} using its contract address above.</Text>
+          <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: 8 }}>No ERC-20 Tokens</Text>
+          <Text style={{ fontSize: 14, color: colors.textSub, textAlign: 'center', lineHeight: 20 }}>
+            Add any ERC-20 token on {network.name} using its contract address above.
+          </Text>
         </View>
       ) : (
-        <Card style={{ padding: 0, overflow: 'hidden' }}>
+        <View style={[styles.tokenList, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           {tokens.map((tk, i) => (
             <View key={tk.id}>
               <View style={styles.tokenRow}>
-                <View style={styles.tokenAvatar}>
-                  <Text style={styles.tokenAvatarText}>{tk.symbol.slice(0, 3).toUpperCase()}</Text>
+                <View style={[styles.tokenAvatar, { backgroundColor: colors.surface2 }]}>
+                  <Text style={{ fontSize: 10, fontWeight: '800', color: colors.accent }}>{tk.symbol.slice(0, 3).toUpperCase()}</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.tokenSymbol}>{tk.symbol}</Text>
-                  <Text style={styles.tokenName} numberOfLines={1}>{tk.name}</Text>
-                  <Text style={styles.tokenAddr} numberOfLines={1}>{tk.contract_address.slice(0, 14)}…</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text }}>{tk.symbol}</Text>
+                  <Text style={{ fontSize: 11, color: colors.textSub, marginTop: 1 }}>{tk.name}</Text>
+                  <Text style={{ fontSize: 10, color: colors.textDim, fontFamily: 'monospace', marginTop: 1 }}>
+                    {tk.contract_address.slice(0, 14)}…
+                  </Text>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={styles.tokenBalance}>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text, fontFamily: 'monospace' }}>
                     {balances[tk.contract_address] != null ? formatBalance(balances[tk.contract_address]) : '…'}
                   </Text>
-                  <Text style={styles.tokenBalanceSym}>{tk.symbol}</Text>
+                  <Text style={{ fontSize: 11, color: colors.textSub, marginTop: 1 }}>{tk.symbol}</Text>
                 </View>
-                <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(tk)}>
-                  <Text style={{ color: COLORS.danger, fontSize: 16 }}>🗑</Text>
+                <TouchableOpacity
+                  style={{ width: 36, height: 36, justifyContent: 'center', alignItems: 'center' }}
+                  onPress={() => handleDelete(tk)}>
+                  <Text style={{ color: colors.danger, fontSize: 16 }}>🗑</Text>
                 </TouchableOpacity>
               </View>
-              {i < tokens.length - 1 && <View style={{ height: 1, backgroundColor: COLORS.border, marginHorizontal: SPACING.md }} />}
+              {i < tokens.length - 1 && <View style={{ height: 1, backgroundColor: colors.border, marginHorizontal: SPACING.md }} />}
             </View>
           ))}
-        </Card>
+        </View>
       )}
     </ScrollView>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
-  scroll:    { padding: SPACING.lg, paddingBottom: 40 },
-  centered:  { paddingVertical: 60, alignItems: 'center' },
-  addHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  addTitle:  { fontSize: 15, fontWeight: '700', color: COLORS.accent },
-  label: { fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', color: COLORS.textMuted, marginBottom: 6, marginTop: SPACING.md },
-  inputRow: { flexDirection: 'row', alignItems: 'center' },
-  monoInput: { backgroundColor: COLORS.surface2, borderRadius: RADIUS.md, padding: 12, color: COLORS.text, fontSize: 12, borderWidth: 1.5, borderColor: COLORS.border, fontFamily: 'monospace' },
-  lookupBtn: { backgroundColor: COLORS.accentDim, borderRadius: RADIUS.md, padding: 12, borderWidth: 1, borderColor: 'rgba(124,111,247,0.3)' },
-  previewBox: { backgroundColor: COLORS.surface2, borderRadius: RADIUS.md, padding: 12, borderWidth: 1, borderColor: 'rgba(16,185,129,0.3)' },
-  previewRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  tokenRow: { flexDirection: 'row', alignItems: 'center', padding: SPACING.md, gap: 12 },
-  tokenAvatar: { width: 40, height: 40, borderRadius: 12, backgroundColor: COLORS.surface3, justifyContent: 'center', alignItems: 'center' },
-  tokenAvatarText: { fontSize: 10, fontWeight: '800', color: COLORS.accent },
-  tokenSymbol:  { fontSize: 14, fontWeight: '700', color: COLORS.text },
-  tokenName:    { fontSize: 11, color: COLORS.textMuted, marginTop: 1 },
-  tokenAddr:    { fontSize: 10, color: COLORS.textDim, fontFamily: 'monospace', marginTop: 1 },
-  tokenBalance: { fontSize: 14, fontWeight: '700', color: COLORS.text, fontFamily: 'monospace' },
-  tokenBalanceSym: { fontSize: 11, color: COLORS.textMuted, marginTop: 1 },
-  deleteBtn: { width: 36, height: 36, justifyContent: 'center', alignItems: 'center' },
-  emptyWrap: { alignItems: 'center', paddingVertical: 60 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: COLORS.text, marginBottom: 8 },
-  emptyDesc:  { fontSize: 14, color: COLORS.textMuted, textAlign: 'center', lineHeight: 20 },
+  addCard:    { borderRadius: RADIUS.lg, padding: SPACING.lg, borderWidth: 1, marginBottom: SPACING.md },
+  addHeader:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  label:      { fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 },
+  monoInput:  { padding: 12, borderRadius: RADIUS.md, borderWidth: 1.5, fontFamily: 'monospace', fontSize: 12 },
+  lookupBtn:  { padding: 12, borderRadius: RADIUS.md, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
+  previewBox: { borderRadius: RADIUS.md, padding: 12, borderWidth: 1, marginTop: SPACING.md },
+  tokenList:  { borderRadius: RADIUS.lg, borderWidth: 1, overflow: 'hidden' },
+  tokenRow:   { flexDirection: 'row', alignItems: 'center', padding: SPACING.md, gap: 12 },
+  tokenAvatar:{ width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
 })

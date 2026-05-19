@@ -1,5 +1,6 @@
 // src/screens/wallet/ImportWalletScreen.js
 import React, { useState } from 'react'
+import { useTheme } from '../../context/ThemeContext'
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, TextInput,
@@ -12,6 +13,8 @@ import { useApp } from '../../context/AppContext'
 import { COLORS, SPACING, RADIUS } from '../../utils/theme'
 import { Card, PrimaryButton, SecondaryButton, Alert, Input } from '../../components/UI'
 import Toast from 'react-native-toast-message'
+
+const { colors } = useTheme()
 
 export default function ImportWalletScreen({ navigation }) {
   const { loadWallets, activeNetwork } = useApp()
@@ -87,7 +90,7 @@ export default function ImportWalletScreen({ navigation }) {
                 <TextInput
                   style={[styles.multiInput]}
                   placeholder="word1 word2 word3 ... word12"
-                  placeholderTextColor={COLORS.textDim}
+                  placeholderTextColor={colors.textDim}
                   value={input}
                   onChangeText={setInput}
                   multiline
@@ -104,7 +107,7 @@ export default function ImportWalletScreen({ navigation }) {
                 <TextInput
                   style={styles.monoInput}
                   placeholder="0x... or 64 hex characters"
-                  placeholderTextColor={COLORS.textDim}
+                  placeholderTextColor={colors.textDim}
                   value={input}
                   onChangeText={setInput}
                   autoCapitalize="none"
@@ -133,12 +136,12 @@ export default function ImportWalletScreen({ navigation }) {
             {/* Address preview */}
             <View style={styles.addressBox}>
               <View style={styles.addrAvatar}>
-                <Text style={{ color: COLORS.accent, fontSize: 11, fontWeight: '800' }}>
+                <Text style={{ color: colors.accent, fontSize: 11, fontWeight: '800' }}>
                   {preview.address.slice(2, 4).toUpperCase()}
                 </Text>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 2 }}>Wallet Address</Text>
+                <Text style={{ fontSize: 11, color: colors.textMuted, marginBottom: 2 }}>Wallet Address</Text>
                 <Text style={styles.addrText} numberOfLines={1}>{preview.address}</Text>
               </View>
             </View>
@@ -173,36 +176,36 @@ export default function ImportWalletScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  safe:   { flex: 1, backgroundColor: COLORS.bg },
+  safe:   { flex: 1, backgroundColor: colors.bg },
   scroll: { padding: SPACING.lg, paddingBottom: 40 },
-  cardTitle: { fontSize: 20, fontWeight: '800', color: COLORS.text, marginBottom: 6 },
-  cardDesc:  { fontSize: 14, color: COLORS.textMuted, lineHeight: 20, marginBottom: SPACING.md },
+  cardTitle: { fontSize: 20, fontWeight: '800', color: colors.text, marginBottom: 6 },
+  cardDesc:  { fontSize: 14, color: colors.textMuted, lineHeight: 20, marginBottom: SPACING.md },
   tabRow: {
-    flexDirection: 'row', backgroundColor: COLORS.surface2,
+    flexDirection: 'row', backgroundColor: colors.surface2,
     borderRadius: RADIUS.md, padding: 4, marginBottom: SPACING.md,
   },
   tab: { flex: 1, paddingVertical: 9, borderRadius: RADIUS.sm - 2, alignItems: 'center' },
-  tabActive: { backgroundColor: COLORS.surface },
-  tabText: { fontSize: 13, fontWeight: '600', color: COLORS.textMuted },
-  tabTextActive: { color: COLORS.text },
-  label: { fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', color: COLORS.textMuted, marginBottom: 6 },
+  tabActive: { backgroundColor: colors.surface },
+  tabText: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
+  tabTextActive: { color: colors.text },
+  label: { fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', color: colors.textMuted, marginBottom: 6 },
   multiInput: {
-    backgroundColor: COLORS.surface2, borderRadius: RADIUS.md,
-    padding: 12, color: COLORS.text, fontSize: 13,
-    borderWidth: 1.5, borderColor: COLORS.border,
+    backgroundColor: colors.surface2, borderRadius: RADIUS.md,
+    padding: 12, color: colors.text, fontSize: 13,
+    borderWidth: 1.5, borderColor: colors.border,
     minHeight: 100, fontFamily: 'monospace',
   },
   monoInput: {
-    backgroundColor: COLORS.surface2, borderRadius: RADIUS.md,
-    padding: 12, color: COLORS.text, fontSize: 12,
-    borderWidth: 1.5, borderColor: COLORS.border,
+    backgroundColor: colors.surface2, borderRadius: RADIUS.md,
+    padding: 12, color: colors.text, fontSize: 12,
+    borderWidth: 1.5, borderColor: colors.border,
     fontFamily: 'monospace',
   },
-  hint: { fontSize: 11, color: COLORS.textDim, marginTop: 4, marginBottom: SPACING.md },
+  hint: { fontSize: 11, color: colors.textDim, marginTop: 4, marginBottom: SPACING.md },
   addressBox: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: COLORS.surface2, borderRadius: RADIUS.md,
-    padding: 12, borderWidth: 1, borderColor: COLORS.border,
+    backgroundColor: colors.surface2, borderRadius: RADIUS.md,
+    padding: 12, borderWidth: 1, borderColor: colors.border,
     marginBottom: SPACING.md,
   },
   addrAvatar: {
@@ -211,5 +214,5 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(124,111,247,0.3)',
     justifyContent: 'center', alignItems: 'center',
   },
-  addrText: { fontFamily: 'monospace', fontSize: 12, color: COLORS.text },
+  addrText: { fontFamily: 'monospace', fontSize: 12, color: colors.text },
 })
