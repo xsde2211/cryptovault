@@ -14,10 +14,10 @@ import { COLORS, SPACING, RADIUS } from '../../utils/theme'
 import { Card, PrimaryButton, SecondaryButton, Alert, Input } from '../../components/UI'
 import Toast from 'react-native-toast-message'
 
-const { colors } = useTheme()
-
 export default function ImportWalletScreen({ navigation }) {
+
   const { loadWallets, activeNetwork } = useApp()
+  const { colors } = useTheme()
   const [mode,      setMode]      = useState('mnemonic') // 'mnemonic' | 'privatekey'
   const [input,     setInput]     = useState('')
   const [step,      setStep]      = useState('input')    // 'input' | 'password'
@@ -56,7 +56,47 @@ export default function ImportWalletScreen({ navigation }) {
       setLoading(false)
     }
   }
-
+const styles = StyleSheet.create({
+  safe:   { flex: 1, backgroundColor: colors.bg },
+  scroll: { padding: SPACING.lg, paddingBottom: 40 },
+  cardTitle: { fontSize: 20, fontWeight: '800', color: colors.text, marginBottom: 6 },
+  cardDesc:  { fontSize: 14, color: colors.textMuted, lineHeight: 20, marginBottom: SPACING.md },
+  tabRow: {
+    flexDirection: 'row', backgroundColor: colors.surface2,
+    borderRadius: RADIUS.md, padding: 4, marginBottom: SPACING.md,
+  },
+  tab: { flex: 1, paddingVertical: 9, borderRadius: RADIUS.sm - 2, alignItems: 'center' },
+  tabActive: { backgroundColor: colors.surface },
+  tabText: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
+  tabTextActive: { color: colors.text },
+  label: { fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', color: colors.textMuted, marginBottom: 6 },
+  multiInput: {
+    backgroundColor: colors.surface2, borderRadius: RADIUS.md,
+    padding: 12, color: colors.text, fontSize: 13,
+    borderWidth: 1.5, borderColor: colors.border,
+    minHeight: 100, fontFamily: 'monospace',
+  },
+  monoInput: {
+    backgroundColor: colors.surface2, borderRadius: RADIUS.md,
+    padding: 12, color: colors.text, fontSize: 12,
+    borderWidth: 1.5, borderColor: colors.border,
+    fontFamily: 'monospace',
+  },
+  hint: { fontSize: 11, color: colors.textDim, marginTop: 4, marginBottom: SPACING.md },
+  addressBox: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: colors.surface2, borderRadius: RADIUS.md,
+    padding: 12, borderWidth: 1, borderColor: colors.border,
+    marginBottom: SPACING.md,
+  },
+  addrAvatar: {
+    width: 36, height: 36, borderRadius: 10,
+    backgroundColor: 'rgba(124,111,247,0.15)',
+    borderWidth: 1, borderColor: 'rgba(124,111,247,0.3)',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  addrText: { fontFamily: 'monospace', fontSize: 12, color: colors.text },
+})
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
@@ -175,44 +215,3 @@ export default function ImportWalletScreen({ navigation }) {
   )
 }
 
-const styles = StyleSheet.create({
-  safe:   { flex: 1, backgroundColor: colors.bg },
-  scroll: { padding: SPACING.lg, paddingBottom: 40 },
-  cardTitle: { fontSize: 20, fontWeight: '800', color: colors.text, marginBottom: 6 },
-  cardDesc:  { fontSize: 14, color: colors.textMuted, lineHeight: 20, marginBottom: SPACING.md },
-  tabRow: {
-    flexDirection: 'row', backgroundColor: colors.surface2,
-    borderRadius: RADIUS.md, padding: 4, marginBottom: SPACING.md,
-  },
-  tab: { flex: 1, paddingVertical: 9, borderRadius: RADIUS.sm - 2, alignItems: 'center' },
-  tabActive: { backgroundColor: colors.surface },
-  tabText: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
-  tabTextActive: { color: colors.text },
-  label: { fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', color: colors.textMuted, marginBottom: 6 },
-  multiInput: {
-    backgroundColor: colors.surface2, borderRadius: RADIUS.md,
-    padding: 12, color: colors.text, fontSize: 13,
-    borderWidth: 1.5, borderColor: colors.border,
-    minHeight: 100, fontFamily: 'monospace',
-  },
-  monoInput: {
-    backgroundColor: colors.surface2, borderRadius: RADIUS.md,
-    padding: 12, color: colors.text, fontSize: 12,
-    borderWidth: 1.5, borderColor: colors.border,
-    fontFamily: 'monospace',
-  },
-  hint: { fontSize: 11, color: colors.textDim, marginTop: 4, marginBottom: SPACING.md },
-  addressBox: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: colors.surface2, borderRadius: RADIUS.md,
-    padding: 12, borderWidth: 1, borderColor: colors.border,
-    marginBottom: SPACING.md,
-  },
-  addrAvatar: {
-    width: 36, height: 36, borderRadius: 10,
-    backgroundColor: 'rgba(124,111,247,0.15)',
-    borderWidth: 1, borderColor: 'rgba(124,111,247,0.3)',
-    justifyContent: 'center', alignItems: 'center',
-  },
-  addrText: { fontFamily: 'monospace', fontSize: 12, color: colors.text },
-})

@@ -13,7 +13,6 @@ import { Card, Spinner, Alert } from '../../components/UI'
 
 const { width } = Dimensions.get('window')
 const COL_WIDTH = (width - SPACING.lg * 2 - SPACING.sm) / 2
-const { colors } = useTheme()
 
 // Alchemy NFT API
 const fetchNFTs = async (address, networkId) => {
@@ -41,6 +40,7 @@ const fetchNFTs = async (address, networkId) => {
 
 export default function NFTScreen() {
   const { activeWallet, activeNetwork } = useApp()
+  const { colors } = useTheme()
   const network = getNetwork(activeNetwork)
   const [nfts,       setNfts]       = useState([])
   const [loading,    setLoading]    = useState(true)
@@ -64,12 +64,41 @@ export default function NFTScreen() {
   useEffect(() => { load() }, [load])
 
   const supportsNFTs = ['eth_mainnet', 'polygon_mainnet', 'eth_sepolia'].includes(activeNetwork)
-
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
+  scroll:    { padding: SPACING.lg, paddingBottom: 40 },
+  centered:  { paddingVertical: 80, alignItems: 'center' },
+  emptyWrap: { alignItems: 'center', paddingVertical: 60 },
+  emptyTitle: { fontSize: 18, fontWeight: '700', color: COLORS.text, marginBottom: 8 },
+  emptyDesc:  { fontSize: 14, color: COLORS.textMuted, textAlign: 'center', lineHeight: 20 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
+  nftCard: {
+    width: COL_WIDTH, backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.lg, overflow: 'hidden',
+    borderWidth: 1, borderColor: COLORS.border,
+  },
+  nftImage: { width: COL_WIDTH, height: COL_WIDTH, backgroundColor: COLORS.surface2 },
+  nftPlaceholder: { justifyContent: 'center', alignItems: 'center' },
+  nftBody: { padding: 10 },
+  nftName: { fontSize: 12, fontWeight: '700', color: COLORS.text },
+  nftCollection: { fontSize: 10, color: COLORS.textMuted, marginTop: 2 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'flex-end' },
+  modalCard: { backgroundColor: COLORS.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '90%', overflow: 'hidden' },
+  modalImage: { width: '100%', height: 320, backgroundColor: COLORS.surface2 },
+  modalName: { fontSize: 22, fontWeight: '800', color: COLORS.text, marginBottom: 4 },
+  modalCollection: { fontSize: 14, color: COLORS.accent, fontWeight: '600', marginBottom: 12 },
+  modalDesc: { fontSize: 13, color: COLORS.textMuted, lineHeight: 20, marginBottom: 16 },
+  modalMeta: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderTopWidth: 1, borderTopColor: COLORS.border },
+  metaLabel: { fontSize: 12, color: COLORS.textMuted, fontWeight: '600' },
+  metaValue: { fontSize: 12, color: COLORS.text, fontFamily: 'monospace', maxWidth: 200 },
+  closeBtn: { margin: SPACING.lg, backgroundColor: COLORS.surface2, borderRadius: RADIUS.md, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
+  closeBtnText: { color: COLORS.text, fontWeight: '700', fontSize: 15 },
+})
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.scroll}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load() }} tintColor={colors.accent} />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load() }} tintColor={COLORS.accent} />}
     >
       {!supportsNFTs && (
         <Alert type="warning">NFTs are only available on Ethereum and Polygon.</Alert>
@@ -148,33 +177,4 @@ export default function NFTScreen() {
   )
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
-  scroll:    { padding: SPACING.lg, paddingBottom: 40 },
-  centered:  { paddingVertical: 80, alignItems: 'center' },
-  emptyWrap: { alignItems: 'center', paddingVertical: 60 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: 8 },
-  emptyDesc:  { fontSize: 14, color: colors.textMuted, textAlign: 'center', lineHeight: 20 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
-  nftCard: {
-    width: COL_WIDTH, backgroundColor: colors.surface,
-    borderRadius: RADIUS.lg, overflow: 'hidden',
-    borderWidth: 1, borderColor: colors.border,
-  },
-  nftImage: { width: COL_WIDTH, height: COL_WIDTH, backgroundColor: colors.surface2 },
-  nftPlaceholder: { justifyContent: 'center', alignItems: 'center' },
-  nftBody: { padding: 10 },
-  nftName: { fontSize: 12, fontWeight: '700', color: colors.text },
-  nftCollection: { fontSize: 10, color: colors.textMuted, marginTop: 2 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'flex-end' },
-  modalCard: { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '90%', overflow: 'hidden' },
-  modalImage: { width: '100%', height: 320, backgroundColor: colors.surface2 },
-  modalName: { fontSize: 22, fontWeight: '800', color: colors.text, marginBottom: 4 },
-  modalCollection: { fontSize: 14, color: colors.accent, fontWeight: '600', marginBottom: 12 },
-  modalDesc: { fontSize: 13, color: colors.textMuted, lineHeight: 20, marginBottom: 16 },
-  modalMeta: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderTopWidth: 1, borderTopColor: colors.border },
-  metaLabel: { fontSize: 12, color: colors.textMuted, fontWeight: '600' },
-  metaValue: { fontSize: 12, color: colors.text, fontFamily: 'monospace', maxWidth: 200 },
-  closeBtn: { margin: SPACING.lg, backgroundColor: colors.surface2, borderRadius: RADIUS.md, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
-  closeBtnText: { color: colors.text, fontWeight: '700', fontSize: 15 },
-})
+

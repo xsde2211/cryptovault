@@ -16,10 +16,10 @@ import { Card, PrimaryButton, SecondaryButton, Alert, Input } from '../../compon
 import Toast from 'react-native-toast-message'
 
 const STEPS = ['Generate', 'Backup', 'Verify', 'Secure']
-const { colors } = useTheme()
 
 export default function CreateWalletScreen({ navigation }) {
   const { loadWallets, activeNetwork } = useApp()
+  const { colors } = useTheme()
   const [step,        setStep]        = useState(0)
   const [walletData,  setWalletData]  = useState(null)
   const [revealed,    setRevealed]    = useState(false)
@@ -72,7 +72,41 @@ export default function CreateWalletScreen({ navigation }) {
   }
 
   const words = walletData?.mnemonic?.split(' ') || []
-
+const styles = StyleSheet.create({
+  safe:   { flex: 1, backgroundColor: colors.bg },
+  scroll: { padding: SPACING.lg, paddingBottom: 40 },
+  progressRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+  stepDot: {
+    width: 28, height: 28, borderRadius: 14, justifyContent: 'center', alignItems: 'center',
+    backgroundColor: colors.surface2, borderWidth: 1.5, borderColor: colors.border,
+  },
+  stepActive: { backgroundColor: 'rgba(124,111,247,0.2)', borderColor: colors.accent },
+  stepDone:   { backgroundColor: colors.accent, borderColor: colors.accent },
+  progressBar:  { height: 3, backgroundColor: colors.border, borderRadius: 2, marginBottom: SPACING.lg },
+  progressFill: { height: 3, backgroundColor: colors.accent, borderRadius: 2 },
+  emoji: { fontSize: 52, textAlign: 'center', marginBottom: 12 },
+  cardTitle: { fontSize: 20, fontWeight: '800', color: colors.text, marginBottom: 6 },
+  cardDesc: { fontSize: 14, color: colors.textMuted, lineHeight: 20, marginBottom: SPACING.md },
+  revealBtn: {
+    backgroundColor: colors.surface2, borderRadius: RADIUS.md,
+    padding: SPACING.lg * 1.5, alignItems: 'center', marginBottom: SPACING.md,
+    borderWidth: 1, borderColor: colors.border,
+  },
+  seedGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: SPACING.md },
+  seedWord: {
+    width: '30%', backgroundColor: colors.surface2, borderRadius: RADIUS.sm,
+    padding: 8, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.border,
+  },
+  seedNum: { fontSize: 10, color: colors.textDim, marginRight: 4, minWidth: 16 },
+  seedTxt: { fontSize: 13, color: colors.text, fontFamily: 'monospace', fontWeight: '500' },
+  copyBtn: { alignItems: 'center', paddingVertical: 12, marginBottom: SPACING.md },
+  verifyInput: {
+    backgroundColor: colors.surface2, borderRadius: RADIUS.md,
+    padding: 12, color: colors.text, fontSize: 14, borderWidth: 1.5, borderColor: colors.border,
+    fontFamily: 'monospace',
+  },
+  btnRow: { flexDirection: 'row', marginTop: SPACING.md },
+})
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
@@ -192,38 +226,4 @@ export default function CreateWalletScreen({ navigation }) {
   )
 }
 
-const styles = StyleSheet.create({
-  safe:   { flex: 1, backgroundColor: colors.bg },
-  scroll: { padding: SPACING.lg, paddingBottom: 40 },
-  progressRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-  stepDot: {
-    width: 28, height: 28, borderRadius: 14, justifyContent: 'center', alignItems: 'center',
-    backgroundColor: colors.surface2, borderWidth: 1.5, borderColor: colors.border,
-  },
-  stepActive: { backgroundColor: 'rgba(124,111,247,0.2)', borderColor: colors.accent },
-  stepDone:   { backgroundColor: colors.accent, borderColor: colors.accent },
-  progressBar:  { height: 3, backgroundColor: colors.border, borderRadius: 2, marginBottom: SPACING.lg },
-  progressFill: { height: 3, backgroundColor: colors.accent, borderRadius: 2 },
-  emoji: { fontSize: 52, textAlign: 'center', marginBottom: 12 },
-  cardTitle: { fontSize: 20, fontWeight: '800', color: colors.text, marginBottom: 6 },
-  cardDesc: { fontSize: 14, color: colors.textMuted, lineHeight: 20, marginBottom: SPACING.md },
-  revealBtn: {
-    backgroundColor: colors.surface2, borderRadius: RADIUS.md,
-    padding: SPACING.lg * 1.5, alignItems: 'center', marginBottom: SPACING.md,
-    borderWidth: 1, borderColor: colors.border,
-  },
-  seedGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: SPACING.md },
-  seedWord: {
-    width: '30%', backgroundColor: colors.surface2, borderRadius: RADIUS.sm,
-    padding: 8, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.border,
-  },
-  seedNum: { fontSize: 10, color: colors.textDim, marginRight: 4, minWidth: 16 },
-  seedTxt: { fontSize: 13, color: colors.text, fontFamily: 'monospace', fontWeight: '500' },
-  copyBtn: { alignItems: 'center', paddingVertical: 12, marginBottom: SPACING.md },
-  verifyInput: {
-    backgroundColor: colors.surface2, borderRadius: RADIUS.md,
-    padding: 12, color: colors.text, fontSize: 14, borderWidth: 1.5, borderColor: colors.border,
-    fontFamily: 'monospace',
-  },
-  btnRow: { flexDirection: 'row', marginTop: SPACING.md },
-})
+
