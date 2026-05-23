@@ -19,7 +19,10 @@
         "NSFaceIDUsageDescription": "Use Face ID to unlock your wallet",
         "NSCameraUsageDescription": "Used for KYC selfie and document upload",
         "NSPhotoLibraryUsageDescription": "Used to upload KYC documents",
-        "NSMicrophoneUsageDescription": "Used for KYC video recording"
+        "NSMicrophoneUsageDescription": "Used for KYC video recording",
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
       }
     },
     "android": {
@@ -33,7 +36,9 @@
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
-        "RECORD_AUDIO"
+        "RECORD_AUDIO",
+        "INTERNET", 
+        "ACCESS_NETWORK_STATE"
       ]
     },
     "plugins": [

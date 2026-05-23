@@ -232,6 +232,57 @@ export default function SettingsScreen() {
           <Row icon="📋" label="Transaction History"  onPress={() => navigation.navigate('Transactions')} />
         </View>
 
+        {/* ── Legal ── */}
+        <SectionLabel title="LEGAL" />
+
+        <View
+          style={[
+            s.card,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <Row
+            icon="📜"
+            label="Terms & Conditions"
+            onPress={() => navigation.navigate('TermsAndConditions')}
+          />
+
+          <Divider />
+
+          <Row
+            icon="🔒"
+            label="Privacy Policy"
+            onPress={() => navigation.navigate('PrivacyPolicy')}
+          />
+
+          <Divider />
+
+          <Row
+            icon="💸"
+            label="Refund Policy"
+            onPress={() => navigation.navigate('RefundPolicy')}
+          />
+
+          <Divider />
+
+          <Row
+            icon="❌"
+            label="Cancellation Policy"
+            onPress={() => navigation.navigate('CancellationPolicy')}
+          />
+
+          <Divider />
+
+          <Row
+            icon="☎️"
+            label="Contact Us"
+            onPress={() => navigation.navigate('ContactUs')}
+          />
+        </View>
+
         {/* ── Sign Out ── */}
         <View style={[s.card, { backgroundColor: colors.surface, borderColor: `${colors.danger}30`, marginBottom: SPACING.xl }]}>
           <Row icon="🚪" label={signingOut ? 'Signing out…' : 'Sign Out'} onPress={handleSignOut} danger />

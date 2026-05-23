@@ -36,6 +36,14 @@ import KYCScreen          from '../screens/kyc/KYCScreen'
 import PhysicalCardScreen from '../screens/vcc/PhysicalCardScreen'
 import MerchantScreen     from '../screens/p2p/MerchantScreen'
 
+import {
+  TermsAndConditionsScreen,
+  PrivacyPolicyScreen,
+  RefundPolicyScreen,
+  ContactUsScreen,
+  CancellationPolicyScreen,
+} from '../screens/legal/LegalScreens'
+
 const Stack = createNativeStackNavigator()
 const Tab   = createBottomTabNavigator()
 
@@ -154,6 +162,11 @@ export default function AppNavigator() {
             <Stack.Screen name="KYC"          component={KYCScreen}           options={mkHeader('Identity Verify',    colors)} />
             <Stack.Screen name="PhysicalCard" component={PhysicalCardScreen}  options={mkHeader('Order Physical Card',colors)} />
             <Stack.Screen name="Merchant"     component={MerchantScreen}      options={mkHeader('Merchant QR',        colors)} />
+            <Stack.Screen name="TermsAndConditions"   component={TermsAndConditionsScreen} />
+            <Stack.Screen name="PrivacyPolicy"        component={PrivacyPolicyScreen} />
+            <Stack.Screen name="RefundPolicy"         component={RefundPolicyScreen} />
+            <Stack.Screen name="ContactUs"            component={ContactUsScreen} />
+            <Stack.Screen name="CancellationPolicy"   component={CancellationPolicyScreen} />
           </>
         )}
       </Stack.Navigator>
