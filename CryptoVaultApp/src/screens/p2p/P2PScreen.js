@@ -16,6 +16,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { SPACING, RADIUS, SHADOWS } from '../../utils/theme'
 import { PrimaryButton, SecondaryButton, Input, Alert, Spinner, InfoRow } from '../../components/UI'
 import Toast from 'react-native-toast-message'
+import { supabase } from '../../services/supabase/client'
 
 import {
   getListings, postSellListing, postBuyListing,
@@ -299,8 +300,6 @@ export default function P2PScreen() {
       setBuyOrder({ id: result.order_id, ...result })
       setBuyReservedUntil(result.reserved_until)
 
-      // Open Razorpay payment sheet
-      const { data: { session } } = await import('../../services/supabase/client').then(m => m.supabase.auth.getSession())
       const rzResult = await openRazorpayCheckout({
         orderId:     result.razorpay_order_id,
         amount:      result.amount,

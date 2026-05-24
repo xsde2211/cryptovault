@@ -60,6 +60,7 @@ export const openRazorpayCheckout = async ({
 
   // Expo Go fallback — return mock for testing
   if (__DEV__) {
+    console.log('RAZORPAY DEV MOCK TRIGGERED')
     console.warn('[Razorpay] Using DEV mock — install react-native-razorpay for production')
     return {
       razorpay_payment_id: `pay_DEV_${Date.now()}`,
